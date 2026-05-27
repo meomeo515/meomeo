@@ -33,26 +33,35 @@
             font-weight: bold;
             color: #007bff;
             margin: 20px 0;
-            padding: 10px;
+            padding: 15px;
             background-color: #e9ecef;
             border-radius: 8px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         button {
             background-color: #28a745;
             color: white;
             border: none;
             padding: 12px 24px;
-            font-size: 18px;
+            font-size: 16px;
             border-radius: 25px;
             cursor: pointer;
-            transition: background 0.3s;
-            margin: 10px;
+            transition: background 0.3s, transform 0.1s;
+            margin: 5px;
+            font-weight: 600;
         }
         button:hover {
             background-color: #218838;
         }
+        button:active {
+            transform: scale(0.98);
+        }
         button:disabled {
             background-color: #6c757d;
+            cursor: not-allowed;
         }
         #btnNext {
             background-color: #007bff;
@@ -61,179 +70,35 @@
             background-color: #0069d9;
         }
         .result-box {
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 18px;
             text-align: left;
             padding: 15px;
             border-radius: 8px;
             background-color: #f8f9fa;
+            border-left: 5px solid #ccc;
         }
         .score {
             font-size: 22px;
             font-weight: bold;
             margin-top: 10px;
         }
-        .success { color: #28a745; }
-        .warning { color: #ffc107; }
-        .danger { color: #dc3545; }
+        .success { color: #28a745; border-color: #28a745; }
+        .warning { color: #ffc107; border-color: #ffc107; }
+        .danger { color: #dc3545; border-color: #dc3545; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Phát Âm Chuẩn Anh - Mỹ 🇺🇸</h1>
-    <p>Hãy đọc to từ/câu sau đây:</p>
+    <p>Hãy bấm nút nghe mẫu hoặc nhấn nói để luyện tập:</p>
     
-    <div class="word-box" id="targetWord">Beautiful</div>
+    <div class="word-box" id="targetWord">Loading...</div>
     
     <button id="btnListen">🔊 Nghe mẫu</button>
     <button id="btnSpeak">🎤 Nhấn để Nói</button>
     <button id="btnNext">Từ tiếp theo ➡️</button>
 
-    <div class="result-box">
-        <div><strong>Bạn đã nói:</strong> <span id="userSpeech" style="color: #555;">...</span></div>
-        <div class="score" id="scoreResult"></div>
-    </div>
-</div>
-
-<script>
-    // Danh sách từ vựng luyện tập mẫu
-    const wordList = [
-        "Beautiful", "Schedule", "Water", "Mountain", "Literature", 
-        "I love learning English", "How is the weather today?"
-    ];
-    let currentIndex = 0;
-
-    const targetWordIndex = document.getElementById('targetWord');
-    const btnSpeak = document.getElementById('btnSpeak');
-    const btnListen = document.getElementById('btnListen');
-    const btnNext = document.getElementById('btnNext');
-    const userSpeechText = document.getElementById('userSpeech');
-    const scoreResult = document.getElementById('scoreResult');
-
-    // Kiểm tra xem trình duyệt có hỗ trợ Web Speech API không
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-        alert("Trình duyệt của bạn không hỗ trợ Web Speech API. Hãy thử lại trên Google Chrome!");
-    } else {
-        const recognition = new SpeechRecognition();
-        // Cấu hình nhận diện chuẩn Anh-Mỹ (en-US)
-        recognition.lang = 'en-US'; 
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        // 1. Chức năng Phát âm mẫu (Sử dụng Web Speech Synthesis)
-        btnListen.addEventListener('click', () => {
-            const utterance = new SpeechSynthesisUtterance(wordList[currentIndex]);
-            // Tìm giọng đọc chuẩn Mỹ (en-US) có sẵn trong hệ thống
-            const voices = window.speechSynthesis.getVoices();
-            const usVoice = voices.find(voice => voice.lang === 'en-US');
-            if (usVoice) utterance.voice = usVoice;
-            
-            window.speechSynthesis.speak(utterance);
-        });
-
-        // 2. Chức năng Nhấn để nói
-        btnSpeak.addEventListener('click', () => {
-            recognition.start();
-            btnSpeak.textContent = "🎙️ Đang nghe...";
-            btnSpeak.disabled = true;
-        });
-
-        // 3. Xử lý kết quả trả về từ Google API
-        recognition.onresult = function(event) {
-            const speechResult = event.results[0][0].transcript.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
-            const targetWord = wordList[currentIndex].toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
-            
-            userSpeechText.textContent = event.results[0][0].transcript;
-
-            // Thuật toán so sánh chuỗi đơn giản để chấm điểm
-            let score = 0;
-            if (speechResult === targetWord) {
-                score = 100;
-            } else {
-                // Tính toán độ tương đồng (Sử dụng thuật toán Levenshtein đơn giản)
-                score = Math.round(similarity(speechResult, targetWord) * 100);
-            }
-
-            // Hiển thị kết quả và màu sắc theo số điểm
-            scoreResult.textContent = `Điểm số: ${score}%`;
-            scoreResult.className = "score"; // reset
-            if (score >= 80) {
-                scoreResult.classList.add("success");
-                scoreResult.textContent += " (Tuyệt vời!)";
-            } else if (score >= 50) {
-                scoreResult.classList.add("warning");
-                scoreResult.textContent += " (Tạm ổn, cần cố gắng!)";
-            } else {
-                scoreResult.classList.add("danger");
-                scoreResult.textContent += " (Chưa chính xác!)";
-            }
-        };
-
-        recognition.onspeechend = function() {
-            recognition.stop();
-            btnSpeak.textContent = "🎤 Nhấn để Nói";
-            btnSpeak.disabled = false;
-        };
-
-        recognition.onerror = function(event) {
-            btnSpeak.textContent = "🎤 Nhấn để Nói";
-            btnSpeak.disabled = false;
-            scoreResult.textContent = "Lỗi nhận diện: " + event.error;
-            scoreResult.className = "score danger";
-        };
-    }
-
-    // Chuyển từ tiếp theo
-    btnNext.addEventListener('click', () => {
-        currentIndex = (currentIndex + 1) % wordList.length;
-        targetWordIndex.textContent = wordList[currentIndex];
-        userSpeechText.textContent = "...";
-        scoreResult.textContent = "";
-    });
-
-    // Hàm tính toán độ tương đồng giữa 2 chuỗi văn bản
-    function similarity(s1, s2) {
-        let longer = s1;
-        let shorter = s2;
-        if (s1.length < s2.length) {
-            longer = s2;
-            shorter = s1;
-        }
-        let longerLength = longer.length;
-        if (longerLength === 0) {
-            return 1.0;
-        }
-        return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
-    }
-
-    function editDistance(s1, s2) {
-        s1 = s1.toLowerCase();
-        s2 = s2.toLowerCase();
-        let costs = new Array();
-        for (let i = 0; i <= s1.length; i++) {
-            let lastValue = i;
-            for (let j = 0; j <= s2.length; j++) {
-                if (i == 0)
-                    costs[j] = j;
-                else {
-                    if (j > 0) {
-                        let newValue = costs[j - 1];
-                        if (s1.charAt(i - 1) != s2.charAt(j - 1))
-                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-                        costs[j - 1] = lastValue;
-                        lastValue = newValue;
-                    }
-                }
-            }
-            if (i > 0)
-                costs[s2.length] = lastValue;
-        }
-        return costs[s2.length];
-    }
-</script>
-
-</body>
-</html>
+    <div class="result-box" id="resultCard">
+        <div><strong>Bạn đã nói:</strong> <span
