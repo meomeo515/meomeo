@@ -3,48 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chinese Pronunciation Assessment</title>
+    <title>AI Chinese Pronunciation Coach 🐾</title>
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-light: #eef2ff;
-            --dark: #0f172a;
+            /* Hệ màu xanh dương chủ đạo mới */
+            --primary: #007aff;        /* Xanh dương hiện đại (Apple Blue) */
+            --primary-light: #e3efff;  /* Xanh dương nhạt bổ trợ */
+            --primary-dark: #0056b3;
+            --dark: #1e293b;
             --light: #f8fafc;
             --success: #10b981;
             --error: #ef4444;
-            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            /* Đổi gradient nền sang tông xanh dương pastel nhẹ nhàng */
+            --bg-gradient: linear-gradient(-45deg, #e0f2fe, #dbeafe, #eff6ff, #cff0f9);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'PingFang SC', 'Helvetica Neue', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
             background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
             color: var(--dark);
+            position: relative;
+            overflow-x: hidden;
         }
 
+        /* -------------------------------
+           LỚP TRANG TRÍ ĐÀN MÈO BAY Ở NỀN
+        --------------------------------- */
+        .bg-cat {
+            position: absolute;
+            user-select: none;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.05));
+        }
+        .cat-1 { top: 8%; left: 6%; animation: floatCat1 14s ease-in-out infinite; font-size: 3.5rem; }
+        .cat-2 { top: 75%; left: 10%; animation: floatCat2 18s ease-in-out infinite; font-size: 2.8rem; }
+        .cat-3 { top: 12%; right: 8%; animation: floatCat3 16s ease-in-out infinite; font-size: 4rem; }
+        .cat-4 { top: 68%; right: 6%; animation: floatCat1 12s ease-in-out infinite; font-size: 3rem; }
+        .cat-5 { bottom: 42%; left: 3%; animation: floatCat3 15s ease-in-out infinite; font-size: 2.5rem; }
+        .cat-6 { bottom: 45%; right: 4%; animation: floatCat2 13s ease-in-out infinite; font-size: 3.2rem; }
+
         .container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             max-width: 650px;
             width: 100%;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            border-radius: 28px;
+            box-shadow: 0 20px 50px rgba(0, 122, 255, 0.12);
             padding: 35px;
             text-align: center;
+            z-index: 1;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.6);
         }
 
         header h1 {
-            font-size: 24px;
+            font-size: 26px;
             color: var(--primary);
+            font-weight: 800;
             margin-bottom: 5px;
         }
 
@@ -52,6 +82,7 @@
             font-size: 14px;
             color: #64748b;
             margin-bottom: 30px;
+            font-weight: 500;
         }
 
         /* Carousel câu hỏi */
@@ -61,7 +92,7 @@
             justify-content: space-between;
             background: var(--light);
             padding: 25px;
-            border-radius: 16px;
+            border-radius: 20px;
             margin-bottom: 25px;
             border: 1px solid #e2e8f0;
         }
@@ -69,8 +100,8 @@
         .nav-btn {
             background: white;
             border: 1px solid #cbd5e1;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             cursor: pointer;
             font-weight: bold;
@@ -85,6 +116,7 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+            transform: scale(1.05);
         }
 
         .nav-btn:disabled {
@@ -98,32 +130,31 @@
         }
 
         .zh-text {
-            font-size: 38px;
-            font-weight: 700;
+            font-size: 42px;
+            font-weight: 800;
             letter-spacing: 2px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
-        /* Định dạng màu sắc từng chữ sau khi chấm điểm */
         .word-span {
             display: inline-block;
             margin: 0 2px;
             transition: color 0.3s;
         }
-        .word-span.correct { color: var(--success); }
-        .word-span.incorrect { color: var(--error); text-decoration: underline; }
+        .word-span.correct { color: var(--success); font-weight: 900; }
+        .word-span.incorrect { color: var(--error); font-weight: 900; text-decoration: underline wavy var(--error) 2px; }
 
         .pinyin-text {
-            font-size: 18px;
-            color: #4b5563;
-            font-weight: 500;
-            margin-bottom: 5px;
+            font-size: 20px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .vi-text {
-            font-size: 14px;
+            font-size: 15px;
             color: #64748b;
-            font-style: italic;
+            font-weight: 500;
         }
 
         /* Nút tính năng */
@@ -136,7 +167,7 @@
             border-radius: 50px;
             border: none;
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
@@ -148,33 +179,28 @@
         .btn-audio {
             background: var(--primary-light);
             color: var(--primary);
+            border: 1px solid rgba(0, 122, 255, 0.1);
         }
 
-        .btn-audio:hover { background: #e0e7ff; }
+        .btn-audio:hover { background: #d0e4ff; color: var(--primary-dark); }
 
         .btn-mic {
-            background: var(--primary);
+            background: linear-gradient(135deg, #60a5fa, #007aff);
             color: white;
-            padding: 15px 35px;
+            padding: 15px 40px;
             font-size: 16px;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.25);
         }
 
         .btn-mic:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 22px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 12px 28px rgba(0, 122, 255, 0.35);
         }
 
         .btn-mic.recording {
-            background: var(--error);
+            background: #334155;
             animation: pulse 1.5s infinite;
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         #statusText {
@@ -182,12 +208,13 @@
             color: #64748b;
             min-height: 20px;
             margin-bottom: 25px;
+            font-weight: 500;
         }
 
         /* Bảng hiển thị kết quả */
         .result-card {
-            background: #f8fafc;
-            border-radius: 16px;
+            background: var(--light);
+            border-radius: 20px;
             padding: 25px;
             border: 1px solid #e2e8f0;
             text-align: left;
@@ -206,16 +233,17 @@
         .score-title {
             font-weight: 700;
             font-size: 16px;
+            color: #475569;
         }
 
         .score-number {
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 800;
             color: var(--primary);
         }
 
         .metric-row {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .metric-label {
@@ -223,26 +251,26 @@
             justify-content: space-between;
             font-size: 13px;
             color: #475569;
-            margin-bottom: 4px;
-            font-weight: 500;
+            margin-bottom: 5px;
+            font-weight: 700;
         }
 
         .progress-bar-bg {
             background: #e2e8f0;
-            height: 8px;
-            border-radius: 4px;
+            height: 10px;
+            border-radius: 6px;
             overflow: hidden;
         }
 
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            border-radius: 4px;
-            transition: width 0.5s ease-out;
+            border-radius: 6px;
+            transition: width 0.6s cubic-bezier(0.1, 0.8, 0.3, 1);
         }
 
-        .bg-primary-fill { background: var(--primary); }
-        .bg-success-fill { background: var(--success); }
+        .bg-primary-fill { background: linear-gradient(90deg, #3b82f6, #007aff); }
+        .bg-success-fill { background: linear-gradient(90deg, #10b981, #00b894); }
 
         .transcript-box {
             margin-top: 15px;
@@ -252,18 +280,54 @@
             font-size: 13px;
             border: 1px solid #e2e8f0;
             color: #475569;
+            font-weight: 500;
+        }
+
+        /* -------------------------------
+           HIỆU ỨNG CHUYỂN ĐỘNG ANIMATION
+        --------------------------------- */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes floatCat1 {
+            0% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) translateX(15px) rotate(12deg); }
+            100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+        }
+        @keyframes floatCat2 {
+            0% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            50% { transform: translateY(20px) translateX(-15px) rotate(-8deg); }
+            100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+        }
+        @keyframes floatCat3 {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(-15deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
+<div class="bg-cat cat-1">🐱</div>
+<div class="bg-cat cat-2">🐈</div>
+<div class="bg-cat cat-3">😸</div>
+<div class="bg-cat cat-4">😹</div>
+<div class="bg-cat cat-5">🐾</div>
+<div class="bg-cat cat-6">🦊</div>
+
 <div class="container">
     <header>
-        <h1>AI Chinese Pronunciation Coach</h1>
+        <h1>AI Chinese Pronunciation Coach 🐾</h1>
         <p>Phần mềm chấm điểm phát âm tiếng Trung thông minh</p>
     </header>
 
-    <!-- Khu vực hiển thị câu hỏi -->
     <div class="carousel">
         <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>❮</button>
         <div class="sentence-display">
@@ -274,7 +338,6 @@
         <button class="nav-btn" id="nextBtn" onclick="navigate(1)">❯</button>
     </div>
 
-    <!-- Khu vực tương tác -->
     <div class="action-zone">
         <button class="btn btn-audio" onclick="speakSample()">🔊 Nghe đọc mẫu</button>
         <br><br>
@@ -283,7 +346,6 @@
 
     <p id="statusText">Chọn một câu, nghe máy đọc mẫu sau đó nhấn nút Micro để luyện phát âm.</p>
 
-    <!-- Bảng điểm chi tiết -->
     <div class="result-card" id="resultCard">
         <div class="score-header">
             <span class="score-title">Kết quả phân tích âm phổ</span>
@@ -317,9 +379,9 @@
 </div>
 
 <script>
-    // Danh sách các câu giao tiếp cơ bản
     const chineseSentences = [
         { zh: "你好。", py: "nǐ hǎo", vi: "Xin chào.", tokens: ["你", "好"] },
+        { zh: "谢谢 ny。", py: "xièxie nǐ", vi: "Cảm ơn bạn.", tokens: ["谢", "谢", "nǐ", "你"] }, // Cập nhật token bao gồm dự phòng bính âm
         { zh: "谢谢你。", py: "xièxie nǐ", vi: "Cảm ơn bạn.", tokens: ["谢", "谢", "你"] },
         { zh: "你会说汉语吗？", py: "nǐ huì shuō hànyǔ ma?", vi: "Bạn biết nói tiếng Trung không?", tokens: ["你", "会", "说", "汉", "语", "吗"] },
         { zh: "我不客气。", py: "wǒ bú kèqi", vi: "Tôi không khách sáo / Đừng khách sáo.", tokens: ["我", "不", "客", "气"] },
@@ -327,15 +389,19 @@
         { zh: "再见。", py: "zàijiàn", vi: "Tạm biệt.", tokens: ["再", "见"] }
     ];
 
+    // Lọc bỏ trùng lặp câu bổ trợ lỗi gõ
+    if(chineseSentences[1].zh === "谢谢 ny。") {
+        chineseSentences.splice(1, 1);
+    }
+
     let currentIndex = 0;
     let isListening = false;
     let recognition = null;
 
-    // Khởi tạo Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.lang = 'zh-CN'; // Nhận dạng tiếng Trung chuẩn (Mandarin)
+        recognition.lang = 'zh-CN'; 
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
@@ -363,13 +429,11 @@
         alert("Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng sử dụng Google Chrome hoặc Microsoft Edge.");
     }
 
-    // Hiển thị dữ liệu câu hiện tại lên giao diện
     function renderSentence(evaluationResult = null) {
         const sentence = chineseSentences[currentIndex];
         const zhDisplay = document.getElementById('zhDisplay');
         zhDisplay.innerHTML = '';
 
-        // Tách chữ ra để tô màu đúng sai nếu có kết quả chấm điểm
         sentence.tokens.forEach((char, idx) => {
             const span = document.createElement('span');
             span.className = 'word-span';
@@ -385,7 +449,6 @@
             zhDisplay.appendChild(span);
         });
 
-        // Thêm dấu câu nguyên bản
         const punc = sentence.zh.match(/[。？！，,.?]/g);
         if (punc) {
             const puncSpan = document.createElement('span');
@@ -398,7 +461,6 @@
         document.getElementById('viDisplay').innerText = `Ý nghĩa: ${sentence.vi}`;
     }
 
-    // Điều hướng câu hỏi
     function navigate(direction) {
         currentIndex += direction;
         document.getElementById('prevBtn').disabled = (currentIndex === 0);
@@ -408,14 +470,12 @@
         renderSentence();
     }
 
-    // Phát âm mẫu chuẩn (Sử dụng Text-to-Speech của hệ thống)
     function speakSample() {
         window.speechSynthesis.cancel();
         const sentence = chineseSentences[currentIndex].zh;
         const utterance = new SpeechSynthesisUtterance(sentence);
         utterance.lang = 'zh-CN';
         
-        // Tìm giọng đọc tiếng Trung chất lượng cao nếu có sẵn
         const voices = window.speechSynthesis.getVoices();
         const zhVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh_CN'));
         if (zhVoice) utterance.voice = zhVoice;
@@ -427,7 +487,6 @@
         };
     }
 
-    // Điều khiển Bật/Tắt trạng thái ghi âm
     function toggleListening() {
         if (!recognition) return;
         if (isListening) {
@@ -445,7 +504,7 @@
         micBtn.classList.add('recording');
         document.getElementById('statusText').innerText = "🎙️ Micro đang mở, hãy đọc to câu tiếng Trung ở trên...";
         document.getElementById('resultCard').style.display = 'none';
-        renderSentence(); // Reset màu chữ về mặc định
+        renderSentence(); 
         recognition.start();
     }
 
@@ -453,8 +512,7 @@
         isListening = false;
         const micBtn = document.getElementById('micBtn');
         micBtn.innerText = "🎙️ Nhấn để đọc";
-        micBtn.classList.add('btn-mic');
-        micBtn.classList.remove('recording');
+        micBtn.className = 'btn btn-mic';
         document.getElementById('statusText').innerText = "🤖 Đang phân tích dữ liệu âm học và đối chiếu...";
     }
 
@@ -462,9 +520,7 @@
         document.getElementById('resultCard').style.display = 'none';
     }
 
-    // THUẬT TOÁN CHẤM ĐIỂM PHÁT ÂM VÀ ĐỐI CHIẾU CHUỖI
     function evaluatePronunciation(heardText, confidence) {
-        // Làm sạch chuỗi máy nghe được và chuỗi mẫu (bỏ dấu câu, khoảng trắng)
         const cleanHeard = heardText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！\s]/g, "");
         const currentSentence = chineseSentences[currentIndex];
         const tokens = currentSentence.tokens;
@@ -472,37 +528,30 @@
         let matchCount = 0;
         let details = [];
 
-        // Kiểm tra xem từng ký tự trong câu gốc có xuất hiện trong chuỗi người dùng nói không
         tokens.forEach((char) => {
             const charIndex = cleanHeard.indexOf(char);
             if (charIndex !== -1) {
                 matchCount++;
-                details.push(true); // Đúng
+                details.push(true); 
             } else {
-                details.push(false); // Sai hoặc thiếu
+                details.push(false); 
             }
         });
 
-        // 1. Tính toán phần trăm độ chính xác từ vựng (Accuracy)
         let accuracyScore = Math.round((matchCount / tokens.length) * 100);
         
-        // Phạt điểm nếu độ dài chuỗi nói dư thừa quá nhiều so với câu mẫu (nói lan man hoặc lẫn tạp âm)
         if (cleanHeard.length > tokens.length) {
             const penalty = (cleanHeard.length - tokens.length) * 10;
             accuracyScore = Math.max(0, accuracyScore - penalty);
         }
 
-        // 2. Tính toán phần trăm độ tự tin/ngữ điệu (Confidence)
         let confidenceScore = Math.round(confidence * 100);
-        if (accuracyScore === 0) confidenceScore = 0; // Nếu không trúng từ nào thì độ tự tin bằng 0
+        if (accuracyScore === 0) confidenceScore = 0; 
 
-        // 3. Tính toán Điểm Tổng Kết (Overall Score)
         let totalScore = Math.round((accuracyScore * 0.7) + (confidenceScore * 0.3));
 
-        // Cập nhật giao diện màu sắc trực quan cho chữ câu mẫu
         renderSentence({ details: details });
 
-        // Hiển thị bảng điểm phần trăm
         document.getElementById('totalScore').innerText = totalScore + "%";
         document.getElementById('accuracyLabel').innerText = accuracyScore + "%";
         document.getElementById('confidenceLabel').innerText = confidenceScore + "%";
@@ -513,7 +562,6 @@
         document.getElementById('transcriptBox').innerText = `Hệ thống nhận diện được: "${heardText}"`;
         document.getElementById('resultCard').style.display = 'block';
 
-        // Đưa ra nhận xét nhanh
         if (totalScore >= 85) {
             document.getElementById('statusText').innerText = "🎉 Tuyệt vời! Phát âm rất chuẩn xác.";
         } else if (totalScore >= 60) {
@@ -523,15 +571,12 @@
         }
     }
 
-    // Tự động tải câu đầu tiên khi mở trang
     window.addEventListener('DOMContentLoaded', () => {
         renderSentence();
-        // Cần kích hoạt nạp danh sách giọng nói cho một số trình duyệt
         if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = () => {};
         }
     });
 </script>
-
 </body>
 </html>
