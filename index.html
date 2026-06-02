@@ -19,7 +19,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'PingFang SC', 'Helvetica Neue', 'Segoe UI', Tahoma, sans-serif; }
         
-        /* Dynamic gradient background with floating cats */
         body { 
             background: linear-gradient(-45deg, #e0f2fe, #dbeafe, #eff6ff, #cff0f9);
             background-size: 400% 400%;
@@ -34,7 +33,6 @@
             overflow-x: hidden;
         }
 
-        /* Background cat elements */
         .bg-cat {
             position: absolute;
             font-size: 2rem;
@@ -52,7 +50,6 @@
         .cat-5 { bottom: 40%; left: 4%; animation: floatCat3 15s ease-in-out infinite; font-size: 2.5rem; }
         .cat-6 { bottom: 45%; right: 5%; animation: floatCat2 13s ease-in-out infinite; font-size: 3.2rem; }
 
-        /* App card layout */
         .app-card { 
             max-width: 600px; 
             width: 100%; 
@@ -71,7 +68,6 @@
         header h1 { color: var(--primary); font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
         .status-text { font-size: 14px; color: #64748b; font-weight: 500; }
 
-        /* Carousel area */
         .sentence-carousel { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; gap: 15px; }
         .nav-btn { background: var(--primary-light); border: none; width: 48px; height: 48px; border-radius: 50%; color: var(--primary); font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; }
         .nav-btn:hover { background: var(--primary); color: white; transform: scale(1.05); }
@@ -79,61 +75,56 @@
         
         .display-zone { flex: 1; padding: 10px; }
         
-        /* Chinese characters style */
         .chinese-text { font-size: 46px; font-weight: 800; color: var(--dark); letter-spacing: 2px; margin-bottom: 12px; transition: all 0.3s; }
         
-        /* Dynamic highlight styles for tokens */
-        .eval-token { display: inline-block; transition: color 0.3s ease; }
-        .eval-token.correct { color: var(--text-success); font-weight: 900; text-shadow: 0 2px 4px rgba(16, 185, 129, 0.1); }
+        /* Token Base Styles */
+        .eval-token { display: inline-block; transition: all 0.3s ease; position: relative; margin: 0 2px; }
+        .eval-token.correct { color: var(--text-success); font-weight: 900; }
         .eval-token.incorrect { color: var(--text-error); font-weight: 900; text-decoration: underline wavy var(--text-error) 3px; text-underline-offset: 6px; }
+        
+        /* Tooltip to display user error directly above/below the word */
+        .eval-token .user-diff { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--text-error); font-weight: bold; white-space: nowrap; opacity: 0.9; }
 
         .pinyin-text { font-size: 20px; color: var(--primary); font-weight: 600; margin-bottom: 8px; }
-        .meaning-text { font-size: 15px; color: #64748b; font-style: normal; font-weight: 500; }
+        .meaning-text { font-size: 15px; color: #64748b; font-weight: 500; }
 
-        /* TTS Button */
         .btn-tts { background: var(--light); border: 1px solid #e2e8f0; padding: 10px 22px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; color: #475569; margin-bottom: 30px; }
         .btn-tts:hover { background: #edf2f7; color: var(--primary); border-color: var(--primary-light); }
 
-        /* Microphone area */
         .mic-container { position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; }
         .mic-halo { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(0, 122, 255, 0.15); pointer-events: none; opacity: 0; transform: scale(1); }
-        
         .recording .mic-halo { animation: waveRadar 1.5s infinite linear; opacity: 1; }
         
         .btn-mic { width: 96px; height: 96px; border-radius: 50%; border: none; background: linear-gradient(135deg, #60a5fa, #007aff); color: white; font-size: 38px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3); z-index: 2; transition: all 0.3s ease; }
         .btn-mic:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(0, 122, 255, 0.4); }
         .recording .btn-mic { background: #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-size: 28px; }
 
-        #appStatus { font-size: 14px; color: #64748b; font-style: italic; min-height: 20px; margin-bottom: 25px; padding: 0 10px; font-weight: 500; }
+        #appStatus { font-size: 14px; color: #64748b; font-style: italic; min-height: 20px; margin-bottom: 35px; padding: 0 10px; font-weight: 500; }
 
-        /* Result Panel */
+        /* Result Area */
         .result-panel { width: 100%; background: var(--light); border-radius: 20px; padding: 22px; border: 1px solid #e2e8f0; display: none; text-align: left; animation: slideUp 0.4s ease; }
-        
         .progress-section { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
         .progress-container { width: 100%; }
         .progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 5px; }
         .progress-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; width: 0%; border-radius: 6px; transition: width 0.8s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        .progress-bar-fill { height: 100%; width: 0%; border-radius: 6px; transition: width 0.6s cubic-bezier(0.1, 0.8, 0.3, 1); }
         
         .fill-total { background: linear-gradient(90deg, #3b82f6, #007aff); }
         .fill-accuracy { background: linear-gradient(90deg, #10b981, var(--success)); }
         .fill-fluency { background: linear-gradient(90deg, #a855f7, #8b5cf6); }
 
-        /* Word details badges */
         .word-details { display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 15px; justify-content: center; }
-        .word-badge { padding: 8px 14px; border-radius: 12px; background: white; text-align: center; font-size: 13px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .word-badge { padding: 6px 12px; border-radius: 10px; background: white; text-align: center; font-size: 13px; font-weight: 700; border: 1px solid #e2e8f0; }
         .word-badge.perfect { color: var(--text-success); background: #e6f9f4; border-color: #b3f1e1; }
-        .word-badge.bad { color: var(--text-error); background: #fdf2f2; border-color: #fde2e2; text-decoration: line-through 1.5px; }
+        .word-badge.bad { color: var(--text-error); background: #fdf2f2; border-color: #fde2e2; }
 
-        .recognized-text-box { margin-top: 10px; font-size: 13px; color: #64748b; text-align: center; font-style: normal; background: #f1f5f9; padding: 8px; border-radius: 8px; font-weight: 500; }
+        .recognized-text-box { margin-top: 15px; font-size: 13px; color: #64748b; text-align: center; background: #f1f5f9; padding: 10px; border-radius: 8px; font-weight: 500; }
 
-        /* Keyframe Animations */
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        
         @keyframes floatCat1 {
             0% { transform: translateY(0px) translateX(0px) rotate(0deg); }
             50% { transform: translateY(-35px) translateX(15px) rotate(15deg); }
@@ -149,7 +140,6 @@
             50% { transform: translateY(-20px) rotate(-20px); }
             100% { transform: translateY(0px) rotate(0deg); }
         }
-        
         @keyframes waveRadar {
             0% { transform: scale(0.8); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -233,13 +223,12 @@
 </div>
 
 <script>
-    // Core data in Chinese - English
     const hsk1Data = [
-        { zh: "你好。", pinyin: "nǐ hǎo", en: "Hello.", tokens: ["你好"] },
-        { zh: "谢谢你。", pinyin: "xièxie nǐ", en: "Thank you.", tokens: ["谢谢", "你"] },
-        { zh: "你会说汉语吗？", pinyin: "nǐ huì shuō hànyǔ ma?", en: "Can you speak Chinese?", tokens: ["你", "会", "说", "汉语", "吗"] },
-        { zh: "我爱中国菜。", pinyin: "wǒ ài zhōngguó cài", en: "I love Chinese food.", tokens: ["我", "爱", "中国菜"] },
-        { zh: "再见。", pinyin: "zàijiàn", en: "Goodbye.", tokens: ["再见"] }
+        { zh: "你好。", pinyin: "nǐ hǎo", en: "Hello.", tokens: ["你", "好"] },
+        { zh: "谢谢你。", pinyin: "xièxie nǐ", en: "Thank you.", tokens: ["谢", "谢", "你"] },
+        { zh: "你会说汉语吗？", pinyin: "nǐ huì shuō hànyǔ ma?", en: "Can you speak Chinese?", tokens: ["你", "会", "说", "汉", "语", "吗"] },
+        { zh: "我爱中国菜。", pinyin: "wǒ ài zhōngguó cài", en: "I love Chinese food.", tokens: ["我", "爱", "中", "国", "菜"] },
+        { zh: "再见。", pinyin: "zàijiàn", en: "Goodbye.", tokens: ["再", "见"] }
     ];
 
     let currentIndex = 0;
@@ -247,7 +236,6 @@
     let recognition = null;
     let startTime = 0;
 
-    // Initialize Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
@@ -291,29 +279,35 @@
         setTimeout(() => { playSample(); }, 600);
     });
 
-    // Render interactive characters
-    function renderTargetSentence(evaluationResults = null) {
+    // Render characters with precise visual updates
+    function renderTargetSentence(evaluationMap = null) {
         const targetTextContainer = document.getElementById('targetText');
         targetTextContainer.innerHTML = '';
-        
         const currentData = hsk1Data[currentIndex];
         
-        currentData.tokens.forEach((token) => {
+        currentData.tokens.forEach((token, idx) => {
             const span = document.createElement('span');
             span.className = 'eval-token';
             span.innerText = token;
             
-            if (evaluationResults) {
-                if (evaluationResults[token] > 0) {
+            if (evaluationMap) {
+                const res = evaluationMap[idx];
+                if (res.correct) {
                     span.classList.add('correct');
                 } else {
                     span.classList.add('incorrect');
+                    // Add wrong word subtext label below the character
+                    if (res.userWord) {
+                        const label = document.createElement('span');
+                        label.className = 'user-diff';
+                        label.innerText = `(${res.userWord})`;
+                        span.appendChild(label);
+                    }
                 }
             }
             targetTextContainer.appendChild(span);
         });
 
-        // Append punctuation
         const punctuation = currentData.zh.match(/[。？！，,.?]/g);
         if (punctuation) {
             const puncSpan = document.createElement('span');
@@ -330,7 +324,6 @@
         currentIndex += direction;
         document.getElementById('prevBtn').disabled = (currentIndex === 0);
         document.getElementById('nextBtn').disabled = (currentIndex === hsk1Data.length - 1);
-        
         document.getElementById('resultPanel').style.display = 'none';
         document.getElementById('appStatus').innerText = "已切换至新句 | Switched to new sentence.";
         
@@ -379,57 +372,60 @@
         }
     }
 
-    // High-accuracy matching and calculations
+    // High-speed, high-accuracy sequential alignment algorithm
     function processRealPronunciation(heardText, confidence, duration) {
-        const cleanHeard = heardText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！\s]/g,"").trim();
+        // Data cleaning
+        const cleanHeard = heardText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！\s]/g,"").split("");
         const targetObj = hsk1Data[currentIndex];
-        const cleanTarget = targetObj.zh.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！\s]/g,"").trim();
+        const targetTokens = targetObj.tokens;
 
         const wordDetailsContainer = document.getElementById('wordDetails');
         wordDetailsContainer.innerHTML = '';
 
+        let evaluationMap = {};
         let matchedCount = 0;
-        let evaluationMap = {}; 
 
-        targetObj.tokens.forEach(token => {
+        // Sequence Alignment Logic (Map target indices against user input array)
+        targetTokens.forEach((token, idx) => {
             const badge = document.createElement('div');
-            
-            if (cleanHeard.includes(token)) {
-                matchedCount += token.length;
+            // Check if the expected token matches what was recorded at this approximate position
+            if (cleanHeard[idx] === token) {
+                matchedCount++;
                 badge.className = 'word-badge perfect';
-                let tokenScore = Math.round((confidence * 30) + 70); 
+                let tokenScore = Math.round((confidence * 20) + 80); 
                 badge.innerText = `${token} (${tokenScore}%)`;
-                evaluationMap[token] = tokenScore; 
+                evaluationMap[idx] = { correct: true, score: tokenScore, userWord: null };
             } else {
                 badge.className = 'word-badge bad';
-                badge.innerText = `${token} (错误/Missed)`;
-                evaluationMap[token] = 0; 
+                const userSaid = cleanHeard[idx] ? cleanHeard[idx] : "遗漏/Miss";
+                badge.innerText = `${token} ➔ Got: ${userSaid}`;
+                evaluationMap[idx] = { correct: false, score: 0, userWord: cleanHeard[idx] || null };
             }
             wordDetailsContainer.appendChild(badge);
         });
 
-        // Re-render large text with colors
+        // Trigger text re-rendering with new dynamic labels
         renderTargetSentence(evaluationMap);
 
-        // 1. Accuracy
-        const totalChars = cleanTarget.length;
-        let accuracyScore = Math.round((matchedCount / totalChars) * 100);
+        // 1. Calculate Accuracy Score
+        let accuracyScore = Math.round((matchedCount / targetTokens.length) * 100);
         
-        if (cleanHeard.length > cleanTarget.length) {
-            const penalty = (cleanHeard.length - cleanTarget.length) * 8;
+        // Anti-noise / over-speaking penalty
+        if (cleanHeard.length > targetTokens.length) {
+            const penalty = (cleanHeard.length - targetTokens.length) * 10;
             accuracyScore = Math.max(5, accuracyScore - penalty);
         }
 
-        // 2. Fluency
+        // 2. Calculate Fluency Score
         let fluencyScore = Math.round(confidence * 100);
         const charPerSecond = cleanHeard.length / duration;
-        if (charPerSecond < 1.1) fluencyScore = Math.max(20, fluencyScore - 25);
+        if (charPerSecond < 1.3) fluencyScore = Math.max(15, fluencyScore - 20);
 
-        // 3. Total Score
+        // 3. Calculate Overall Score
         let totalScore = Math.round((accuracyScore * 0.7) + (fluencyScore * 0.3));
         if (accuracyScore === 0) { totalScore = 0; fluencyScore = 0; }
 
-        // Update indicators
+        // Update values inside HTML View
         document.getElementById('txtTotal').innerText = totalScore + "%";
         document.getElementById('txtAccuracy').innerText = accuracyScore + "%";
         document.getElementById('txtFluency').innerText = fluencyScore + "%";
@@ -438,15 +434,14 @@
         document.getElementById('barAccuracy').style.width = accuracyScore + "%";
         document.getElementById('barFluency').style.width = fluencyScore + "%";
 
-        // Raw transcript feedback
         document.getElementById('recognizedBox').innerText = `系统实际录得 | Recognized: "${heardText}"`;
         document.getElementById('resultPanel').style.display = 'block';
         
-        // Final evaluation prompt
+        // Deliver structural string messages to user interface status panel
         if(totalScore >= 85) {
             document.getElementById('appStatus').innerText = "🎉 太棒了！您的发音非常标准 | Excellent pronunciation! Keep it up.";
         } else if (totalScore >= 50) {
-            document.getElementById('appStatus').innerText = "🐾 发音尚可，请注意红色字词 | Good effort! Pay attention to the marked words.";
+            document.getElementById('appStatus').innerText = "🐾 发音尚可，请注意标注的错误字词 | Good effort! Watch the marked error characters.";
         } else {
             document.getElementById('appStatus').innerText = "🐾 仍需努力，建议重新多听范读 | Keep trying! We recommend listening to the sample again.";
         }
