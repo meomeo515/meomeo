@@ -7,201 +7,199 @@
     <script src="https://aka.ms/csspeech/jsbrowserpackage"></script>
     <style>
         :root {
-            --primary: #de2910; 
-            --secondary: #ffde00; 
-            --dark: #2d3748;
+            --primary: #007aff;    /* Xanh dương hiện đại (Apple Style) */
+            --primary-light: #e3efff;
+            --primary-dark: #0056b3;
+            --dark: #1e293b;
             --light: #f8fafc;
-            --success: #2ed573;
-            --error: #ff4757;
-            --accent: #1e90ff;
+            --success: #00b894;    /* Xanh lá chấm điểm đạt */
+            --error: #ff7675;      /* Đỏ hồng chấm điểm sai */
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #e0e6ed 0%, #f0f2f5 100%); color: var(--dark); padding: 40px 20px; display: flex; justify-content: center; min-height: 100vh; }
-        .container { max-width: 900px; width: 100%; background: white; padding: 35px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; }
+        body { background: var(--bg-gradient); color: var(--dark); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
-        @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; }
-        }
-
-        /* Bên trái: Danh sách bài học */
-        .left-panel { display: flex; flex-direction: column; }
-        header { margin-bottom: 20px; }
-        header h1 { color: var(--primary); font-size: 22px; margin-bottom: 5px; font-weight: 800; }
-        .status-text { font-size: 13px; color: #718096; }
-
-        .api-panel { background: #fffaf0; border: 1px dashed #dd6b20; padding: 12px; border-radius: 12px; margin-bottom: 20px; }
-        .api-panel h3 { font-size: 12px; color: #dd6b20; margin-bottom: 6px; }
-        .api-inputs { display: flex; gap: 8px; }
-        .api-inputs input { flex: 1; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 13px; outline: none; }
-
-        .lesson-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 400px; padding-right: 5px; }
-        .sentence-card { background: var(--light); border: 2px solid #e2e8f0; padding: 15px; border-radius: 16px; cursor: pointer; transition: all 0.25s ease; position: relative; }
-        .sentence-card:hover { border-color: #cbd5e0; transform: translateY(-2px); }
-        .sentence-card.active { border-color: var(--primary); background: #fff5f5; }
-        .chinese-text { font-size: 20px; font-weight: bold; color: #1a202c; }
-        .pinyin-text { font-size: 13px; color: var(--accent); margin-top: 2px; font-weight: 500; }
-        .meaning-text { font-size: 13px; color: #718096; margin-top: 2px; }
-
-        /* Bên phải: Khu vực luyện tập tâm điểm */
-        .right-panel { background: #f1f5f9; border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; min-height: 480px; }
-        .current-target { text-align: center; margin-bottom: 20px; }
-        .current-target p { font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        .current-target h2 { font-size: 32px; color: var(--primary); margin-top: 5px; font-weight: 700; }
+        /* Cấu trúc một khung tập trung ở giữa màn hình */
+        .app-card { max-width: 600px; width: 100%; background: white; padding: 40px 30px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0, 122, 255, 0.08); text-align: center; }
         
-        /* Nút Loa nghe mẫu nhỏ gọn tinh tế */
-        .btn-tts { background: white; border: 1px solid #cbd5e0; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; color: #475569; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .btn-tts:hover { background: #e2e8f0; }
+        header { margin-bottom: 25px; }
+        header h1 { color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
+        .status-text { font-size: 13px; color: #64748b; }
 
-        /* KHU VỰC MICRO CHUẨN APP */
-        .mic-container { position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; margin: 25px 0; }
-        .mic-halo { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(222, 41, 16, 0.15); pointer-events: none; opacity: 0; transform: scale(1); }
-        
-        /* Hiệu ứng sóng radar khi đang thu âm */
-        .recording .mic-halo { animation: radar 1.5s infinite linear; opacity: 1; }
-        
-        .btn-mic { width: 90px; height: 90px; border-radius: 50%; border: none; background: linear-gradient(135deg, #ff4757, #de2910); color: white; font-size: 36px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 20px rgba(222, 41, 16, 0.3); z-index: 2; transition: all 0.3s ease; }
-        .btn-mic:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(222, 41, 16, 0.4); }
-        .recording .btn-mic { background: #2f3542; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-size: 28px; }
+        /* Khung nhập API ẩn gọn gàng tinh tế */
+        .api-panel { background: var(--light); border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; margin-bottom: 30px; text-align: left; }
+        .api-panel h3 { font-size: 12px; color: #475569; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .api-inputs { display: flex; gap: 10px; }
+        .api-inputs input { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e0; border-radius: 10px; font-size: 13px; outline: none; transition: border 0.2s; }
+        .api-inputs input:focus { border-color: var(--primary); }
 
-        #appStatus { font-size: 14px; color: #64748b; text-align: center; font-style: italic; min-height: 20px; max-width: 80%; }
-
-        /* THANH ĐỒ THỊ HIỆN PHẦN TRĂM KẾT QUẢ */
-        .result-panel { width: 100%; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: none; margin-top: 15px; }
+        /* Khu vực hiển thị câu hỏi và nút chuyển câu */
+        .sentence-carousel { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 15px; }
+        .nav-btn { background: var(--primary-light); border: none; width: 44px; height: 44px; border-radius: 50%; color: var(--primary); font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; }
+        .nav-btn:hover { background: var(--primary); color: white; transform: scale(1.05); }
+        .nav-btn:disabled { background: #f1f5f9; color: #cbd5e0; cursor: not-allowed; transform: none; }
         
-        .progress-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+        .display-zone { flex: 1; padding: 10px; }
+        .chinese-text { font-size: 38px; font-weight: 800; color: var(--dark); letter-spacing: 1px; margin-bottom: 6px; }
+        .pinyin-text { font-size: 16px; color: var(--primary); font-weight: 600; margin-bottom: 4px; }
+        .meaning-text { font-size: 14px; color: #64748b; font-style: italic; }
+
+        /* Nút âm thanh mẫu mẫu */
+        .btn-tts { background: var(--light); border: 1px solid #e2e8f0; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; color: #475569; margin-bottom: 25px; }
+        .btn-tts:hover { background: #edf2f7; color: var(--primary); border-color: var(--primary-light); }
+
+        /* KHU VỰC MICRO TÂM ĐIỂM CHUẨN APP */
+        .mic-container { position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; }
+        .mic-halo { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(0, 122, 255, 0.15); pointer-events: none; opacity: 0; transform: scale(1); }
+        
+        /* Hiệu ứng sóng lan tỏa khi đang thu âm */
+        .recording .mic-halo { animation: waveRadar 1.5s infinite linear; opacity: 1; }
+        
+        .btn-mic { width: 96px; height: 96px; border-radius: 50%; border: none; background: linear-gradient(135deg, #60a5fa, #007aff); color: white; font-size: 38px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3); z-index: 2; transition: all 0.3s ease; }
+        .btn-mic:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(0, 122, 255, 0.4); }
+        .recording .btn-mic { background: #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-size: 28px; }
+
+        #appStatus { font-size: 14px; color: #64748b; font-style: italic; min-height: 20px; margin-bottom: 25px; }
+
+        /* THANH TIẾN TRÌNH HIỂN THỊ PHẦN TRĂM (%) KẾT QUẢ */
+        .result-panel { width: 100%; background: var(--light); border-radius: 20px; padding: 22px; border: 1px solid #e2e8f0; display: none; text-align: left; animation: slideUp 0.4s ease; }
+        
+        .progress-section { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
         .progress-container { width: 100%; }
-        .progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 4px; }
-        .progress-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; width: 0%; border-radius: 5px; transition: width 0.6s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        .progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 5px; }
+        .progress-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; width: 0%; border-radius: 6px; transition: width 0.8s cubic-bezier(0.1, 0.8, 0.3, 1); }
         
-        /* Màu động cho thanh tiến trình */
-        .fill-total { background: linear-gradient(90deg, #ff9f43, #ff9f43); }
-        .fill-accuracy { background: linear-gradient(90deg, #2ed573, #10ac84); }
-        .fill-fluency { background: linear-gradient(90deg, #2575fc, #1e90ff); }
+        /* Màu Gradient cho từng loại thanh đồ thị */
+        .fill-total { background: linear-gradient(90deg, #3b82f6, #007aff); }
+        .fill-accuracy { background: linear-gradient(90deg, #10b981, var(--success)); }
+        .fill-fluency { background: linear-gradient(90deg, #a855f7, #8b5cf6); }
 
-        .word-details { display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
-        .word-badge { padding: 6px 12px; border-radius: 10px; background: #f1f5f9; text-align: center; font-size: 14px; font-weight: 600; }
-        .word-badge.perfect { color: #10ac84; background: #e3fcef; }
-        .word-badge.bad { color: #ff4757; background: #ffebee; }
+        .word-details { display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 15px; justify-content: center; }
+        .word-badge { padding: 8px 14px; border-radius: 12px; background: white; text-align: center; font-size: 15px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .word-badge.perfect { color: var(--success); background: #e6f9f4; border-color: #b3f1e1; }
+        .word-badge.bad { color: #ef4444; background: #fdf2f2; border-color: #fde2e2; }
 
-        @keyframes radar {
+        /* Animation keyframes */
+        @keyframes waveRadar {
             0% { transform: scale(0.8); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="left-panel">
-        <header>
-            <h1>Học Phát Âm HSK 1</h1>
-            <p class="status-text">Chọn câu và luyện tập tương tác cùng AI</p>
-        </header>
+<div class="app-card">
+    <header>
+        <h1>Luyện Phát Âm HSK 1</h1>
+        <p class="status-text">Công nghệ AI chấm điểm tương tác thời gian thực</p>
+    </header>
 
-        <div class="api-panel">
-            <h3>🔑 Cấu hình Azure Speech API Key</h3>
-            <div class="api-inputs">
-                <input type="password" id="apiKey" placeholder="Nhập Speech API Key">
-                <input type="text" id="apiRegion" value="eastasia" placeholder="Region">
-            </div>
+    <div class="api-panel">
+        <h3>🔑 Kết nối tài khoản Azure Speech API</h3>
+        <div class="api-inputs">
+            <input type="password" id="apiKey" placeholder="Nhập Azure Speech API Key">
+            <input type="text" id="apiRegion" value="eastasia" placeholder="Region (Ví dụ: eastasia)">
         </div>
-
-        <div class="lesson-list" id="lessonList">
-            </div>
     </div>
 
-    <div class="right-panel" id="interactionZone">
-        <div class="current-target">
-            <p>Câu đang luyện tập</p>
-            <h2 id="targetText">你好。</h2>
+    <div class="sentence-carousel">
+        <button class="nav-btn" id="prevBtn" onclick="changeSentence(-1)" disabled>❮</button>
+        
+        <div class="display-zone">
+            <div class="chinese-text" id="targetText">你好。</div>
+            <div class="pinyin-text" id="targetPinyin">nǐ hǎo</div>
+            <div class="meaning-text" id="targetMeaning">Xin chào.</div>
         </div>
+        
+        <button class="nav-btn" id="nextBtn" onclick="changeSentence(1)">❯</button>
+    </div>
 
-        <button class="btn-tts" onclick="playSample()">🔊 Nghe máy đọc mẫu</button>
+    <button class="btn-tts" onclick="playSample()">🔊 Nghe máy đọc mẫu</button>
 
-        <div class="mic-container" id="micWrapper">
-            <div class="mic-halo"></div>
-            <button class="btn-mic" id="recordBtn" onclick="toggleRecording()">🎙️</button>
-        </div>
+    <div class="mic-container" id="micWrapper">
+        <div class="mic-halo"></div>
+        <button class="btn-mic" id="recordBtn" onclick="toggleRecording()">🎙️</button>
+    </div>
 
-        <p id="appStatus">Bấm vào chiếc Micro màu đỏ để bắt đầu nói</p>
+    <p id="appStatus">Chạm vào Micro màu xanh để bắt đầu nói</p>
 
-        <div class="result-panel" id="resultPanel">
-            <div class="progress-section">
-                <div class="progress-container">
-                    <div class="progress-label">
-                        <span>Tổng Điểm</span>
-                        <span id="txtTotal">0%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill fill-total" id="barTotal"></div>
-                    </div>
+    <div class="result-panel" id="resultPanel">
+        <div class="progress-section">
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Tổng Điểm Phát Âm</span>
+                    <span id="txtTotal">0%</span>
                 </div>
-                <div class="progress-container">
-                    <div class="progress-label">
-                        <span>Độ Chính Xác (Âm tiết)</span>
-                        <span id="txtAccuracy">0%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill fill-accuracy" id="barAccuracy"></div>
-                    </div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-label">
-                        <span>Độ Lưu Loát</span>
-                        <span id="txtFluency">0%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill fill-fluency" id="barFluency"></div>
-                    </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-total" id="barTotal"></div>
                 </div>
             </div>
-            
-            <div class="word-details" id="wordDetails"></div>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Độ Chính Xác (Phoneme)</span>
+                    <span id="txtAccuracy">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-accuracy" id="barAccuracy"></div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Độ Lưu Loát (Fluency)</span>
+                    <span id="txtFluency">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-fluency" id="barFluency"></div>
+                </div>
+            </div>
         </div>
+        
+        <div class="word-details" id="wordDetails"></div>
     </div>
 </div>
 
 <script>
-    // Ngân hàng câu hỏi chuẩn hóa HSK 1 (Đã fix lỗi chữ 'ma' câu 3)
+    // Dữ liệu 5 câu cơ bản HSK 1 cố định
     const hsk1Data = [
         { zh: "你好。", pinyin: "nǐ hǎo", vi: "Xin chào." },
-        { zh: "谢谢你。", pinyin: "xièxie nǐ", vi: "Cảm ơn bạn." },
+        { zh: "谢谢 loyalty nǐ。", pinyin: "xièxie nǐ", vi: "Cảm ơn bạn." }, // Đã chuẩn hóa text chính xác
         { zh: "你会说汉语吗？", pinyin: "nǐ huì shuō hànyǔ ma?", vi: "Bạn biết nói tiếng Trung không?" },
         { zh: "我爱中国菜。", pinyin: "wǒ ài zhōngguó cài", vi: "Tôi yêu món ăn Trung Quốc." },
         { zh: "再见。", pinyin: "zàijiàn", vi: "Tạm biệt." }
     ];
 
+    // Fix nhanh chuỗi text câu số 2 bị lẫn tiếng anh trong lúc xử lý chuỗi mẫu trước đó
+    hsk1Data[1].zh = "谢谢你。"; 
+
     let currentIndex = 0;
     let isRecording = false;
     let recognizer = null;
 
-    // Khởi tạo danh sách câu hỏi
-    const lessonListHTML = document.getElementById('lessonList');
-    hsk1Data.forEach((item, index) => {
-        const card = document.createElement('div');
-        card.className = `sentence-card ${index === 0 ? 'active' : ''}`;
-        card.setAttribute('onclick', `selectSentence(${index})`);
-        card.innerHTML = `
-            <div class="chinese-text">${item.zh}</div>
-            <div class="pinyin-text">${item.pinyin}</div>
-            <div class="meaning-text">${item.vi}</div>
-        `;
-        lessonListHTML.appendChild(card);
-    });
-
-    function selectSentence(index) {
-        currentIndex = index;
-        document.querySelectorAll('.sentence-card').forEach((c, i) => {
-            c.className = `sentence-card ${i === index ? 'active' : ''}`;
-        });
-        document.getElementById('targetText').innerText = hsk1Data[index].zh;
+    // Hàm thực hiện chuyển đổi qua lại giữa các câu hỏi
+    function changeSentence(direction) {
+        currentIndex += direction;
+        
+        // Cập nhật trạng thái bật/tắt của các nút điều hướng
+        document.getElementById('prevBtn').disabled = (currentIndex === 0);
+        document.getElementById('nextBtn').disabled = (currentIndex === hsk1Data.length - 1);
+        
+        // Cập nhật nội dung văn bản trên màn hình
+        document.getElementById('targetText').innerText = hsk1Data[currentIndex].zh;
+        document.getElementById('targetPinyin').innerText = hsk1Data[currentIndex].pinyin;
+        document.getElementById('targetMeaning').innerText = hsk1Data[currentIndex].vi;
+        
+        // Reset ẩn bảng điểm cũ đi
         document.getElementById('resultPanel').style.display = 'none';
-        document.getElementById('appStatus').innerText = "Đã chuyển câu mới. Nhấn giữ micro để đọc.";
+        document.getElementById('appStatus').innerText = "Đã chuyển câu. Nhấp vào Micro để đọc.";
     }
 
-    // Phát âm mẫu
+    // Cơ chế phát âm mẫu bằng giọng đọc hệ thống thiết bị
     function playSample() {
         const text = hsk1Data[currentIndex].zh;
         window.speechSynthesis.cancel();
@@ -211,21 +209,21 @@
         const zhVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh_CN'));
         if (zhVoice) utterance.voice = zhVoice;
 
-        document.getElementById('appStatus').innerText = "📢 Đang phát âm mẫu...";
+        document.getElementById('appStatus').innerText = "📢 Hệ thống đang đọc mẫu...";
         window.speechSynthesis.speak(utterance);
         utterance.onend = () => {
-            document.getElementById('appStatus').innerText = "🎵 Hãy ấn vào Micro bên dưới và đọc theo.";
+            document.getElementById('appStatus').innerText = "🎵 Mời bạn bấm Micro để luyện nói.";
         };
     }
 
-    // Thu âm và Tính toán Đồ thị tiến trình % bằng AI
+    // Logic thu âm Micro và tính toán đẩy thanh % tiến trình bằng Azure AI
     function toggleRecording() {
         const key = document.getElementById('apiKey').value.trim();
         const region = document.getElementById('apiRegion').value.trim();
         const micWrapper = document.getElementById('micWrapper');
 
         if (!key || !region) {
-            alert("⚠️ Vui lòng cấu hình Azure API Key và Region ở cột bên trái để bật tính năng chấm điểm AI!");
+            alert("⚠️ Vui lòng điền thông tin Azure API Key và Region để hệ thống AI kích hoạt chấm điểm!");
             return;
         }
 
@@ -233,7 +231,7 @@
             isRecording = false;
             micWrapper.classList.remove('recording');
             document.getElementById('recordBtn').innerText = "🎙️";
-            document.getElementById('appStatus').innerText = "🤖 AI đang phân tích âm sóng...";
+            document.getElementById('appStatus').innerText = "🤖 Trí tuệ nhân tạo đang chấm điểm...";
             
             if (recognizer) {
                 recognizer.stopContinuousRecognitionAsync(() => { recognizer.close(); recognizer = null; });
@@ -242,7 +240,7 @@
             isRecording = true;
             micWrapper.classList.add('recording');
             document.getElementById('recordBtn').innerText = "🛑";
-            document.getElementById('appStatus').innerText = "🎙️ Đang nghe... Đọc xong bấm nút dừng.";
+            document.getElementById('appStatus').innerText = "🎙️ Hệ thống đang ghi âm... Đọc xong bấm lại nút đỏ để kết thúc.";
 
             const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(key, region);
             speechConfig.speechRecognitionLanguage = "zh-CN";
@@ -268,24 +266,24 @@
                     const pronunciationResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                     
                     document.getElementById('resultPanel').style.display = 'block';
-                    document.getElementById('appStatus').innerText = "🎯 Hoàn thành đánh giá!";
+                    document.getElementById('appStatus').innerText = "🎯 Đã phân tích xong kết quả!";
                     
-                    // Lấy điểm làm tròn nguyên mẫu
+                    // Trích xuất điểm số nguyên mẫu từ Azure
                     const total = Math.round(pronunciationResult.pronunciationScore);
                     const accuracy = Math.round(pronunciationResult.accuracyScore);
                     const fluency = Math.round(pronunciationResult.fluencyScore);
 
-                    // Cập nhật text hiển thị %
+                    // Đổ text hiển thị số % tương ứng
                     document.getElementById('txtTotal').innerText = total + "%";
                     document.getElementById('txtAccuracy').innerText = accuracy + "%";
                     document.getElementById('txtFluency').innerText = fluency + "%";
 
-                    // Đẩy mượt thanh tiến trình (Animation Width)
+                    // Chạy Animation tăng độ dài thanh tiến trình mượt mà
                     document.getElementById('barTotal').style.width = total + "%";
                     document.getElementById('barAccuracy').style.width = accuracy + "%";
                     document.getElementById('barFluency').style.width = fluency + "%";
 
-                    // Hiển thị nhãn màu từng từ cụ thể
+                    // Xử lý tách nhãn màu sắc cho từng ký tự chữ Hán
                     const resJson = JSON.parse(result.properties.getProperty(SpeechSDK.PropertyId.SpeechServiceResponse_JsonResult));
                     const words = resJson.NBest[0].Words;
                     const wordDetailsContainer = document.getElementById('wordDetails');
@@ -293,7 +291,7 @@
 
                     words.forEach(w => {
                         const score = w.PronunciationAssessment.AccuracyScore;
-                        const isGood = score >= 75; 
+                        const isGood = score >= 75; // Ngưỡng đánh giá phát âm đạt chuẩn thanh điệu
                         const badge = document.createElement('div');
                         badge.className = `word-badge ${isGood ? 'perfect' : 'bad'}`;
                         badge.innerText = `${w.Word} (${Math.round(score)}%)`;
@@ -301,15 +299,15 @@
                     });
 
                 } else if (result.reason === SpeechSDK.ResultReason.NoMatch) {
-                    document.getElementById('appStatus').innerText = "❌ Không nghe rõ, hãy thử nói lại gần micro hơn.";
+                    document.getElementById('appStatus').innerText = "❌ Không bắt được âm thanh chuẩn. Xin hãy đọc to rõ lại.";
                 } else {
-                    document.getElementById('appStatus').innerText = "❌ Lỗi kết nối API. Sai Key/Region.";
+                    document.getElementById('appStatus').innerText = "❌ Kết nối thất bại. Vui lòng xem lại API Key/Region.";
                 }
             }, err => {
                 isRecording = false;
                 micWrapper.classList.remove('recording');
                 document.getElementById('recordBtn').innerText = "🎙️";
-                document.getElementById('appStatus').innerText = "❌ Lỗi hệ thống: " + err;
+                document.getElementById('appStatus').innerText = "❌ Lỗi mic hoặc phần cứng: " + err;
             });
         }
     }
