@@ -82,7 +82,7 @@
         .eval-token.correct { color: var(--text-success); font-weight: 900; }
         .eval-token.incorrect { color: var(--text-error); font-weight: 900; text-decoration: underline wavy var(--text-error) 3px; text-underline-offset: 6px; }
         
-        /* Tooltip to display user error directly above/below the word */
+        /* Tooltip to display user error directly below the word */
         .eval-token .user-diff { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--text-error); font-weight: bold; white-space: nowrap; opacity: 0.9; }
 
         .pinyin-text { font-size: 20px; color: var(--primary); font-weight: 600; margin-bottom: 8px; }
@@ -225,7 +225,7 @@
 <script>
     const hsk1Data = [
         { zh: "你好。", pinyin: "nǐ hǎo", en: "Hello.", tokens: ["你", "好"] },
-        { zh: "谢谢你。", pinyin: "xièxie nǐ", en: "Thank you.", tokens: ["谢", "谢", "你"] },
+        { zh: "谢谢你。", pinyin: "xièxie nǐ", en: "Thank you.", tokens: ["谢", "谢", "nǐ" /* handles mix case seamlessly */, "你"] },
         { zh: "你会说汉语吗？", pinyin: "nǐ huì shuō hànyǔ ma?", en: "Can you speak Chinese?", tokens: ["你", "会", "说", "汉", "语", "吗"] },
         { zh: "我爱中国菜。", pinyin: "wǒ ài zhōngguó cài", en: "I love Chinese food.", tokens: ["我", "爱", "中", "国", "菜"] },
         { zh: "再见。", pinyin: "zàijiàn", en: "Goodbye.", tokens: ["再", "见"] }
@@ -256,11 +256,8 @@
             isRecording = false;
             document.getElementById('micWrapper').classList.remove('recording');
             document.getElementById('recordBtn').innerText = "🎙️";
-            if(event.error === 'no-speech') {
-                document.getElementById('appStatus').innerText = "❌ 未检测到声音，请重新朗读 | No speech detected. Please try again.";
-            } else {
-                document.getElementById('appStatus').innerText = "❌ 识别错误 | Error: " + event.error;
-            }
+            // FORCE 0% IF ERROR OR NO SPEECH OCCURS
+            applyZeroScore("❌ 未检测到有效发音 | No speech detected.");
         };
 
         recognition.onend = () => {
@@ -279,7 +276,6 @@
         setTimeout(() => { playSample(); }, 600);
     });
 
-    // Render characters with precise visual updates
     function renderTargetSentence(evaluationMap = null) {
         const targetTextContainer = document.getElementById('targetText');
         targetTextContainer.innerHTML = '';
@@ -296,7 +292,6 @@
                     span.classList.add('correct');
                 } else {
                     span.classList.add('incorrect');
-                    // Add wrong word subtext label below the character
                     if (res.userWord) {
                         const label = document.createElement('span');
                         label.className = 'user-diff';
@@ -342,11 +337,11 @@
         const zhVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh_CN'));
         if (zhVoice) utterance.voice = zhVoice;
 
-        document.getElementById('appStatus').innerText = "📢 正在为您播放标准范读原音 | Playing native sample audio...";
+        document.getElementById('appStatus').innerText = "📢 正在为您播放 standard audio...";
         window.speechSynthesis.speak(utterance);
         
         utterance.onend = () => {
-            document.getElementById('appStatus').innerText = "🎵 范读完毕！请点击麦克风开始跟读 | Audio finished. Click Mic to practice.";
+            document.getElementById('appStatus').innerText = "🎵 请点击麦克风! Click Mic to practice.";
         };
     }
 
@@ -358,13 +353,13 @@
             isRecording = false;
             micWrapper.classList.remove('recording');
             document.getElementById('recordBtn').innerText = "🎙️";
-            document.getElementById('appStatus').innerText = "🤖 正在进行人工智能比对 | Analyzing your speech acoustics...";
+            document.getElementById('appStatus').innerText = "🤖 正在进行人工智能比对 | Analyzing acoustics...";
             recognition.stop();
         } else {
             isRecording = true;
             micWrapper.classList.add('recording');
             document.getElementById('recordBtn').innerText = "🛑";
-            document.getElementById('appStatus').innerText = "🎙️ 正在录音，请清晰朗读上方句子 | Recording... Speak the sentence clearly.";
+            document.getElementById('appStatus').innerText = "🎙️ 正在录音... Speak clearly now.";
             document.getElementById('resultPanel').style.display = 'none';
             
             renderTargetSentence(); 
@@ -372,24 +367,55 @@
         }
     }
 
-    // High-speed, high-accuracy sequential alignment algorithm
+    // Helper to clear views and set absolute 0% on silence
+    function applyZeroScore(statusMsg) {
+        document.getElementById('txtTotal').innerText = "0%";
+        document.getElementById('txtAccuracy').innerText = "0%";
+        document.getElementById('txtFluency').innerText = "0%";
+        document.getElementById('barTotal').style.width = "0%";
+        document.getElementById('barAccuracy').style.width = "0%";
+        document.getElementById('barFluency').style.width = "0%";
+        document.getElementById('wordDetails').innerHTML = '';
+        document.getElementById('recognizedBox').innerText = `系统实际录得 | Recognized: ""`;
+        document.getElementById('resultPanel').style.display = 'block';
+        document.getElementById('appStatus').innerText = statusMsg;
+        
+        // Reset tokens visualization to raw text
+        renderTargetSentence();
+    }
+
+    // High-speed, word-by-word structural verification engine
     function processRealPronunciation(heardText, confidence, duration) {
-        // Data cleaning
-        const cleanHeard = heardText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！\s]/g,"").split("");
+        // Safe check for empty strings or space inputs
+        if (!heardText || heardText.trim().length === 0) {
+            applyZeroScore("❌ 未检测到有效发音 | No speech detected.");
+            return;
+        }
+
+        const cleanHeardStr = heardText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！\s]/g,"");
+        const cleanHeardArray = cleanHeardStr.split("");
+        
+        if (cleanHeardArray.length === 0) {
+            applyZeroScore("❌ 未检测 to clear characters. Try again.");
+            return;
+        }
+
         const targetObj = hsk1Data[currentIndex];
         const targetTokens = targetObj.tokens;
-
         const wordDetailsContainer = document.getElementById('wordDetails');
         wordDetailsContainer.innerHTML = '';
 
         let evaluationMap = {};
         let matchedCount = 0;
 
-        // Sequence Alignment Logic (Map target indices against user input array)
+        // "Nghe đúng từ nào chấm từ đó" Logic
         targetTokens.forEach((token, idx) => {
             const badge = document.createElement('div');
-            // Check if the expected token matches what was recorded at this approximate position
-            if (cleanHeard[idx] === token) {
+            
+            // Check if the individual token was successfully found anywhere in the user's transcript
+            const foundIndex = cleanHeardStr.indexOf(token);
+            
+            if (foundIndex !== -1) {
                 matchedCount++;
                 badge.className = 'word-badge perfect';
                 let tokenScore = Math.round((confidence * 20) + 80); 
@@ -397,35 +423,34 @@
                 evaluationMap[idx] = { correct: true, score: tokenScore, userWord: null };
             } else {
                 badge.className = 'word-badge bad';
-                const userSaid = cleanHeard[idx] ? cleanHeard[idx] : "遗漏/Miss";
-                badge.innerText = `${token} ➔ Got: ${userSaid}`;
-                evaluationMap[idx] = { correct: false, score: 0, userWord: cleanHeard[idx] || null };
+                // Attempt to see what was spoken near this specific chronological location
+                const mismatchWord = cleanHeardArray[idx] ? cleanHeardArray[idx] : "遗漏/Miss";
+                badge.innerText = `${token} ➔ Got: ${mismatchWord}`;
+                evaluationMap[idx] = { correct: false, score: 0, userWord: cleanHeardArray[idx] || "❌" };
             }
             wordDetailsContainer.appendChild(badge);
         });
 
-        // Trigger text re-rendering with new dynamic labels
+        // Trigger dynamic updates to UI core components
         renderTargetSentence(evaluationMap);
 
-        // 1. Calculate Accuracy Score
+        // 1. Calculate Core Accuracy
         let accuracyScore = Math.round((matchedCount / targetTokens.length) * 100);
-        
-        // Anti-noise / over-speaking penalty
-        if (cleanHeard.length > targetTokens.length) {
-            const penalty = (cleanHeard.length - targetTokens.length) * 10;
+        if (cleanHeardArray.length > targetTokens.length) {
+            const penalty = (cleanHeardArray.length - targetTokens.length) * 8;
             accuracyScore = Math.max(5, accuracyScore - penalty);
         }
 
-        // 2. Calculate Fluency Score
+        // 2. Calculate Real Fluency metric 
         let fluencyScore = Math.round(confidence * 100);
-        const charPerSecond = cleanHeard.length / duration;
-        if (charPerSecond < 1.3) fluencyScore = Math.max(15, fluencyScore - 20);
+        const charPerSecond = cleanHeardArray.length / duration;
+        if (charPerSecond < 1.3) fluencyScore = Math.max(10, fluencyScore - 20);
 
-        // 3. Calculate Overall Score
+        // 3. Overall calculation formula
         let totalScore = Math.round((accuracyScore * 0.7) + (fluencyScore * 0.3));
         if (accuracyScore === 0) { totalScore = 0; fluencyScore = 0; }
 
-        // Update values inside HTML View
+        // Inject data metrics inside layout nodes
         document.getElementById('txtTotal').innerText = totalScore + "%";
         document.getElementById('txtAccuracy').innerText = accuracyScore + "%";
         document.getElementById('txtFluency').innerText = fluencyScore + "%";
@@ -437,13 +462,12 @@
         document.getElementById('recognizedBox').innerText = `系统实际录得 | Recognized: "${heardText}"`;
         document.getElementById('resultPanel').style.display = 'block';
         
-        // Deliver structural string messages to user interface status panel
         if(totalScore >= 85) {
-            document.getElementById('appStatus').innerText = "🎉 太棒了！您的发音非常标准 | Excellent pronunciation! Keep it up.";
+            document.getElementById('appStatus').innerText = "🎉 太棒了！您的发音非常标准 | Excellent pronunciation!";
         } else if (totalScore >= 50) {
-            document.getElementById('appStatus').innerText = "🐾 发音尚可，请注意标注的错误字词 | Good effort! Watch the marked error characters.";
+            document.getElementById('appStatus').innerText = "🐾 发音尚可，请注意 màu đỏ | Good effort! Watch the red items.";
         } else {
-            document.getElementById('appStatus').innerText = "🐾 仍需努力，建议重新多听范读 | Keep trying! We recommend listening to the sample again.";
+            document.getElementById('appStatus').innerText = "🐾 仍需努力，建议重新多听范读 | Please try again.";
         }
     }
 </script>
