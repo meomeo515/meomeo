@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phần Mềm Chấm Phát Âm Tiếng Trung HSK 1</title>
+    <!-- Nhúng thư viện Microsoft Speech SDK để xử lý chấm điểm AI -->
     <script src="https://aka.ms/csspeech/jsbrowserpackage"></script>
     <style>
         :root {
@@ -14,14 +15,56 @@
             --light: #f8fafc;
             --success: #00b894;    /* Xanh lá chấm điểm đạt */
             --error: #ff7675;      /* Đỏ hồng chấm điểm sai */
-            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: var(--bg-gradient); color: var(--dark); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
+        /* NỀN ĐỘNG GRADIENT VÀ KHÔNG GIAN CHỨA MÈO CHẠY BỔNG BỀNH */
+        body { 
+            background: linear-gradient(-45deg, #e0f2fe, #dbeafe, #eff6ff, #chf0f9);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--dark); 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Các phần tử mèo bay ở nền */
+        .bg-cat {
+            position: absolute;
+            font-size: 2rem;
+            user-select: none;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.25;
+            animation: floatCat 12s ease-in-out infinite;
+        }
+
+        /* Tọa độ và thời gian ngẫu nhiên cho từng chú mèo nền */
+        .cat-1 { top: 10%; left: 8%; animation-delay: 0s; font-size: 3rem; }
+        .cat-2 { top: 75%; left: 12%; animation-delay: 2s; font-size: 2.5rem; }
+        .cat-3 { top: 20%; right: 10%; animation-delay: 4s; font-size: 3.5rem; }
+        .cat-4 { top: 70%; right: 8%; animation-delay: 1s; font-size: 2.8rem; }
+        .cat-5 { bottom: 45%; left: 5%; animation-delay: 3s; font-size: 2.2rem; }
+
         /* Cấu trúc một khung tập trung ở giữa màn hình */
-        .app-card { max-width: 600px; width: 100%; background: white; padding: 40px 30px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0, 122, 255, 0.08); text-align: center; }
+        .app-card { 
+            max-width: 600px; 
+            width: 100%; 
+            background: rgba(255, 255, 255, 0.93); 
+            backdrop-filter: blur(10px);
+            padding: 40px 30px; 
+            border-radius: 28px; 
+            box-shadow: 0 20px 50px rgba(0, 122, 255, 0.12); 
+            text-align: center; 
+            z-index: 1;
+            position: relative;
+        }
         
         header { margin-bottom: 25px; }
         header h1 { color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
@@ -82,6 +125,16 @@
         .word-badge.bad { color: #ef4444; background: #fdf2f2; border-color: #fde2e2; }
 
         /* Animation keyframes */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes floatCat {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(10deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
         @keyframes waveRadar {
             0% { transform: scale(0.8); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -94,12 +147,20 @@
 </head>
 <body>
 
+<!-- Hệ thống mèo bồng bềnh trang trí nền -->
+<div class="bg-cat cat-1">🐱</div>
+<div class="bg-cat cat-2">🐈</div>
+<div class="bg-cat cat-3">😸</div>
+<div class="bg-cat cat-4">😹</div>
+<div class="bg-cat cat-5">🐾</div>
+
 <div class="app-card">
     <header>
-        <h1>Luyện Phát Âm HSK 1</h1>
+        <h1>Luyện Phát Âm HSK 1 🐾</h1>
         <p class="status-text">Công nghệ AI chấm điểm tương tác thời gian thực</p>
     </header>
 
+    <!-- Cấu hình API ẩn/hiện tinh gọn -->
     <div class="api-panel">
         <h3>🔑 Kết nối tài khoản Azure Speech API</h3>
         <div class="api-inputs">
@@ -108,6 +169,7 @@
         </div>
     </div>
 
+    <!-- Vùng hiển thị câu hỏi băng chuyền (Carousel) -->
     <div class="sentence-carousel">
         <button class="nav-btn" id="prevBtn" onclick="changeSentence(-1)" disabled>❮</button>
         
@@ -122,6 +184,7 @@
 
     <button class="btn-tts" onclick="playSample()">🔊 Nghe máy đọc mẫu</button>
 
+    <!-- Khối Micro thiết kế chuẩn tâm điểm giữa màn hình -->
     <div class="mic-container" id="micWrapper">
         <div class="mic-halo"></div>
         <button class="btn-mic" id="recordBtn" onclick="toggleRecording()">🎙️</button>
@@ -129,8 +192,10 @@
 
     <p id="appStatus">Chạm vào Micro màu xanh để bắt đầu nói</p>
 
+    <!-- THANH ĐỒ THỊ % TIẾN TRÌNH KẾT QUẢ -->
     <div class="result-panel" id="resultPanel">
         <div class="progress-section">
+            <!-- Tổng điểm -->
             <div class="progress-container">
                 <div class="progress-label">
                     <span>Tổng Điểm Phát Âm</span>
@@ -140,6 +205,7 @@
                     <div class="progress-bar-fill fill-total" id="barTotal"></div>
                 </div>
             </div>
+            <!-- Độ chính xác âm tiết -->
             <div class="progress-container">
                 <div class="progress-label">
                     <span>Độ Chính Xác (Phoneme)</span>
@@ -149,6 +215,7 @@
                     <div class="progress-bar-fill fill-accuracy" id="barAccuracy"></div>
                 </div>
             </div>
+            <!-- Độ lưu loát -->
             <div class="progress-container">
                 <div class="progress-label">
                     <span>Độ Lưu Loát (Fluency)</span>
@@ -160,6 +227,7 @@
             </div>
         </div>
         
+        <!-- Đánh giá chi tiết màu sắc của từng chữ Hán -->
         <div class="word-details" id="wordDetails"></div>
     </div>
 </div>
@@ -168,18 +236,21 @@
     // Dữ liệu 5 câu cơ bản HSK 1 cố định
     const hsk1Data = [
         { zh: "你好。", pinyin: "nǐ hǎo", vi: "Xin chào." },
-        { zh: "谢谢 loyalty nǐ。", pinyin: "xièxie nǐ", vi: "Cảm ơn bạn." }, // Đã chuẩn hóa text chính xác
+        { zh: "谢谢你。", pinyin: "xièxie nǐ", vi: "Cảm ơn bạn." },
         { zh: "你会说汉语吗？", pinyin: "nǐ huì shuō hànyǔ ma?", vi: "Bạn biết nói tiếng Trung không?" },
         { zh: "我爱中国菜。", pinyin: "wǒ ài zhōngguó cài", vi: "Tôi yêu món ăn Trung Quốc." },
         { zh: "再见。", pinyin: "zàijiàn", vi: "Tạm biệt." }
     ];
 
-    // Fix nhanh chuỗi text câu số 2 bị lẫn tiếng anh trong lúc xử lý chuỗi mẫu trước đó
-    hsk1Data[1].zh = "谢谢你。"; 
-
     let currentIndex = 0;
     let isRecording = false;
     let recognizer = null;
+
+    // Tự động kích hoạt giọng đọc mẫu ngay khi ứng dụng vừa tải xong
+    window.addEventListener('DOMContentLoaded', () => {
+        // Trì hoãn một chút để trình duyệt load danh sách giọng nói speechSynthesis hoàn tất
+        setTimeout(() => { playSample(); }, 600);
+    });
 
     // Hàm thực hiện chuyển đổi qua lại giữa các câu hỏi
     function changeSentence(direction) {
@@ -196,23 +267,30 @@
         
         // Reset ẩn bảng điểm cũ đi
         document.getElementById('resultPanel').style.display = 'none';
-        document.getElementById('appStatus').innerText = "Đã chuyển câu. Nhấp vào Micro để đọc.";
+        document.getElementById('appStatus').innerText = "Đã chuyển câu mới.";
+
+        // TỰ ĐỘNG PHÁT ÂM MẪU NGAY KHI CHUYỂN CÂU
+        playSample();
     }
 
-    // Cơ chế phát âm mẫu bằng giọng đọc hệ thống thiết bị
+    // Cơ chế phát âm mẫu bằng giọng đọc hệ thống thiết bị (TTS)
     function playSample() {
         const text = hsk1Data[currentIndex].zh;
-        window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel(); // Tắt các âm thanh cũ đang xếp hàng đọc dở
+        
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'zh-CN';
+        
+        // Tìm và thiết lập giọng chuẩn Trung Quốc Đại Lục (nếu hệ thống thiết bị hỗ trợ)
         const voices = window.speechSynthesis.getVoices();
         const zhVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh_CN'));
         if (zhVoice) utterance.voice = zhVoice;
 
         document.getElementById('appStatus').innerText = "📢 Hệ thống đang đọc mẫu...";
         window.speechSynthesis.speak(utterance);
+        
         utterance.onend = () => {
-            document.getElementById('appStatus').innerText = "🎵 Mời bạn bấm Micro để luyện nói.";
+            document.getElementById('appStatus').innerText = "🎵 Đã đọc mẫu xong. Mời bạn bấm Micro để luyện nói!";
         };
     }
 
@@ -268,22 +346,21 @@
                     document.getElementById('resultPanel').style.display = 'block';
                     document.getElementById('appStatus').innerText = "🎯 Đã phân tích xong kết quả!";
                     
-                    // Trích xuất điểm số nguyên mẫu từ Azure
                     const total = Math.round(pronunciationResult.pronunciationScore);
                     const accuracy = Math.round(pronunciationResult.accuracyScore);
                     const fluency = Math.round(pronunciationResult.fluencyScore);
 
-                    // Đổ text hiển thị số % tương ứng
+                    // Đổ dữ liệu % text
                     document.getElementById('txtTotal').innerText = total + "%";
                     document.getElementById('txtAccuracy').innerText = accuracy + "%";
                     document.getElementById('txtFluency').innerText = fluency + "%";
 
-                    // Chạy Animation tăng độ dài thanh tiến trình mượt mà
+                    // Chạy đồ thị tiến trình mượt mà
                     document.getElementById('barTotal').style.width = total + "%";
                     document.getElementById('barAccuracy').style.width = accuracy + "%";
                     document.getElementById('barFluency').style.width = fluency + "%";
 
-                    // Xử lý tách nhãn màu sắc cho từng ký tự chữ Hán
+                    // Tách nhãn chấm điểm màu sắc từng chữ Hán
                     const resJson = JSON.parse(result.properties.getProperty(SpeechSDK.PropertyId.SpeechServiceResponse_JsonResult));
                     const words = resJson.NBest[0].Words;
                     const wordDetailsContainer = document.getElementById('wordDetails');
@@ -291,7 +368,7 @@
 
                     words.forEach(w => {
                         const score = w.PronunciationAssessment.AccuracyScore;
-                        const isGood = score >= 75; // Ngưỡng đánh giá phát âm đạt chuẩn thanh điệu
+                        const isGood = score >= 75; 
                         const badge = document.createElement('div');
                         badge.className = `word-badge ${isGood ? 'perfect' : 'bad'}`;
                         badge.innerText = `${w.Word} (${Math.round(score)}%)`;
