@@ -289,14 +289,6 @@
             margin-top: 2px;
         }
 
-        .error-detail {
-            font-size: 0.7rem;
-            color: #dc2626;
-            font-weight: normal;
-            margin-top: 2px;
-            text-align: center;
-        }
-
         .status-message {
             font-size: 0.9rem;
             margin-top: 12px;
@@ -459,7 +451,6 @@
         recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        // Tự động nhận diện khi người dùng dừng nói để chấm
         recognition.continuous = false; 
     }
 
@@ -574,7 +565,6 @@
             statusMessageEl.innerText = "Panda đang lắng nghe, bạn cứ thoải mái đọc nhé!";
         };
 
-        // Khi nhận diện âm thanh xong (người đọc vừa dừng lại) -> Lập tức chấm
         recognition.onresult = (event) => {
             const spokenText = event.results[0][0].transcript;
             stopRecordingProcess();
@@ -639,7 +629,7 @@
         return maxLen === 0 ? 1 : ((maxLen - matrix[cleanB.length][cleanA.length]) / maxLen);
     }
 
-    // Thuật toán chấm phát âm Tỉ Mỉ & Chuẩn Xác từng từ
+    // Thuật toán chấm phát âm
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
@@ -651,15 +641,17 @@
 
         let totalIpaScore = 0;
         let htmlResult = "";
-        let spokenPointer = 0; // Đánh dấu vị trí từ đã khớp trong câu đọc
+        let spokenPointer = 0;
 
-        targetWords.forEach((targetWord, index) => {
+        // Câu 3, 4, 5 (chỉ số 2, 3, 4) sẽ giảm tiêu chuẩn độ tương đồng xuống 0.50 (thay vì 0.65)
+        const matchThreshold = (currentIndex >= 2) ? 0.50 : 0.65;
+
+        targetWords.forEach((targetWord) => {
             const targetIPA = dictionaryIPA[targetWord] || targetWord;
             
             let bestMatchIndex = -1;
             let maxSimilarity = 0;
 
-            // Chấm theo thứ tự từ đọc để đảm bảo độ chuẩn xác theo ngữ cảnh
             for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 3, spokenWords.length); sIdx++) {
                 const spokenWord = spokenWords[sIdx];
                 const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
@@ -672,9 +664,8 @@
                 }
             }
 
-            // Yêu cầu độ tương đồng >= 65% mới tính là đọc đúng từ đó
-            if (bestMatchIndex !== -1 && maxSimilarity >= 0.65) {
-                spokenPointer = bestMatchIndex + 1; // Nhích con trỏ tới từ tiếp theo
+            if (bestMatchIndex !== -1 && maxSimilarity >= matchThreshold) {
+                spokenPointer = bestMatchIndex + 1;
                 totalIpaScore += maxSimilarity;
                 
                 htmlResult += `
@@ -683,28 +674,22 @@
                         <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             } else {
-                // Nếu sai hoặc đọc thiếu
-                const directSpoken = spokenWords[spokenPointer] || "";
-                const directIPA = dictionaryIPA[directSpoken] || directSpoken;
-                const errorHint = directSpoken ? `Đọc thành: /${directIPA}/` : "Chưa đọc";
-
+                // Đọc sai: Hiển thị màu đỏ và IPA chuẩn, KHÔNG hiện phiên âm sai
                 htmlResult += `
                     <div class="word-item">
                         <span class="word-incorrect">${targetWord}</span>
                         <span class="ipa-text">/${targetIPA}/</span>
-                        <span class="error-detail">${errorHint}</span>
                     </div>`;
             }
         });
 
-        // Điểm tính theo tỉ lệ chính xác thực tế
         const finalPercentage = Math.round((totalIpaScore / targetWords.length) * 100);
 
         scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Điểm đạt: Từ 55% trở lên
+        // Đạt từ 55% trở lên
         if (finalPercentage >= 55) {
             playSound('success');
             isCurrentPassed = true;
