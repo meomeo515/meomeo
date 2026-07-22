@@ -346,7 +346,7 @@
             margin-top: 8px;
         }
 
-        /* --- Reward Overlay --- */
+        /* --- Reward Overlay (Cây trúc & Panda) --- */
         .reward-overlay {
             position: absolute;
             top: 0;
@@ -546,9 +546,7 @@
     let currentIndex = 0;
     let isCurrentPassed = false;
     let isRecording = false;
-    let userIntentToRecord = false; // Đánh dấu người dùng có chủ động bấm mic hay không
     let recordingTimeout = null;
-    let finalTranscript = ""; // Lưu tích lũy toàn bộ kết quả nhận dạng
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
@@ -558,9 +556,9 @@
     } else {
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
-        recognition.interimResults = true;
+        recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        recognition.continuous = true;
+        recognition.continuous = true; // Bật continuous để hỗ trợ đọc các câu dài
     }
 
     const targetSentenceEl = document.getElementById('target-sentence');
@@ -600,7 +598,7 @@
 
     function prevSentence() {
         if (currentIndex > 0) {
-            stopRecordingProcess(true);
+            stopRecordingProcess();
             currentIndex--;
             loadSentence();
         }
@@ -609,7 +607,7 @@
     function nextSentence() {
         if (currentIndex < sentences.length - 1) {
             if (isCurrentPassed) {
-                stopRecordingProcess(true);
+                stopRecordingProcess();
                 currentIndex++;
                 loadSentence();
             }
@@ -646,6 +644,7 @@
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.5);
             } else if (type === 'fanfare') {
+                // Nhạc chúc mừng hoàn thành bài học
                 const notes = [523.25, 659.25, 783.99, 1046.50];
                 notes.forEach((freq, idx) => {
                     const noteOsc = ctx.createOscillator();
@@ -673,8 +672,8 @@
 
     if (recognition) {
         micBtn.addEventListener('click', () => {
-            if (userIntentToRecord) {
-                stopRecordingProcess(false); // Ngừng thủ công -> tiến hành phân tích kết quả
+            if (isRecording) {
+                stopRecordingProcess();
             } else {
                 startRecordingProcess();
             }
@@ -687,79 +686,54 @@
             micHint.innerText = "Đang nghe... Bấm 🛑 khi hoàn thành";
             statusMessageEl.className = "status-message status-recording";
             statusMessageEl.innerText = "Panda đang lắng nghe, bạn cứ thoải mái đọc nhé!";
+
+            // Tự động điều chỉnh thời gian thu âm theo số từ trong câu (tối thiểu 6 giây, tối đa 15 giây)
+            const wordCount = sentences[currentIndex].split(' ').length;
+            const dynamicTimeout = Math.max(6000, wordCount * 1200);
+
+            if (recordingTimeout) clearTimeout(recordingTimeout);
+            recordingTimeout = setTimeout(() => {
+                if (isRecording) {
+                    stopRecordingProcess();
+                }
+            }, dynamicTimeout);
         };
 
         recognition.onresult = (event) => {
-            let interimTranscript = "";
+            let spokenText = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + " ";
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
+                spokenText += event.results[i][0].transcript + " ";
             }
-            
-            // Hiển thị trực quan những gì đã nghe được trong lúc đọc
-            const previewText = (finalTranscript + interimTranscript).trim();
-            if (previewText.length > 0) {
-                wordAnalysisEl.innerText = `🗣️ Panda nghe được: "${previewText}"`;
-            }
+            stopRecordingProcess();
+            analyzeIPASpeech(spokenText.trim());
         };
 
-        recognition.onerror = (e) => {
-            // Không ngắt thu âm nếu chỉ là lỗi im lặng (no-speech) khi đang đợi người đọc
-            if (e.error === 'no-speech') return;
-            
-            stopRecordingProcess(true);
+        recognition.onerror = () => {
+            stopRecordingProcess();
             statusMessageEl.className = "status-message status-error";
             statusMessageEl.innerText = "Chưa nghe rõ, bấm Mic thử đọc lại nhé!";
         };
 
         recognition.onend = () => {
-            isRecording = false;
-            // Nếu người học chưa bấm Stop và thời gian chưa hết, tự bật lại Mic để đọc tiếp câu dài
-            if (userIntentToRecord) {
-                try {
-                    recognition.start();
-                } catch(e) {}
+            if (isRecording) {
+                stopRecordingProcess();
             }
         };
     }
 
     function startRecordingProcess() {
-        finalTranscript = "";
-        userIntentToRecord = true;
-        
         try {
             recognition.start();
         } catch (e) {
-            stopRecordingProcess(true);
-            return;
+            stopRecordingProcess();
         }
-
-        // Đặt thời gian tự động ngắt theo độ dài câu (tối thiểu 8 giây, +1.5 giây mỗi từ)
-        const wordCount = sentences[currentIndex].split(' ').length;
-        const dynamicTimeout = Math.max(8000, wordCount * 1500);
-
-        if (recordingTimeout) clearTimeout(recordingTimeout);
-        recordingTimeout = setTimeout(() => {
-            if (userIntentToRecord) {
-                stopRecordingProcess(false); // Hết thời gian -> dừng và phân tích
-            }
-        }, dynamicTimeout);
     }
 
-    function stopRecordingProcess(cancelOnly = false) {
-        userIntentToRecord = false;
+    function stopRecordingProcess() {
         isRecording = false;
         if (recordingTimeout) clearTimeout(recordingTimeout);
-        
         try { recognition.stop(); } catch(e){}
         resetMicUI();
-
-        if (!cancelOnly) {
-            analyzeIPASpeech(finalTranscript.trim());
-        }
     }
 
     function resetMicUI() {
@@ -791,16 +765,10 @@
         return matrix[b.length][a.length];
     }
 
-    // Algorithmic Pronunciation Matcher (Tối ưu hóa So khớp cho câu dài)
+    // Algorithmic Pronunciation Matcher (Text + IPA)
     function analyzeIPASpeech(spokenText) {
-        if (!spokenText || spokenText.trim() === "") {
-            statusMessageEl.className = "status-message status-error";
-            statusMessageEl.innerText = "Chưa nghe thấy bạn nói gì, bấm Mic thử lại nhé!";
-            wordAnalysisEl.innerHTML = "👉 Bấm Micro để bắt đầu nói";
-            return;
-        }
-
         const targetSentence = sentences[currentIndex];
+        
         const cleanTarget = targetSentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
         const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
 
@@ -809,15 +777,16 @@
 
         let totalScore = 0;
         let htmlResult = "";
-        let lastMatchedIndex = -1;
+        let spokenPointer = 0;
 
         targetWords.forEach((targetWord) => {
             const targetIPA = dictionaryIPA[targetWord] || targetWord;
             let bestWordScore = 0;
             let bestMatchIndex = -1;
 
-            // Tìm kiếm điểm phù hợp nhất trên TOÀN BỘ chuỗi từ người dùng đọc
-            spokenWords.forEach((spokenWord, sIdx) => {
+            // Tìm kiếm trong phạm vi cửa sổ 4 từ để hỗ trợ câu dài
+            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 4, spokenWords.length); sIdx++) {
+                const spokenWord = spokenWords[sIdx];
                 let currentWordScore = 0;
 
                 if (targetWord === spokenWord) {
@@ -838,21 +807,16 @@
                     currentWordScore = Math.max(textSim, ipaSim);
                 }
 
-                // Ưu tiên các từ đọc theo đúng thứ tự chuỗi
-                if (sIdx > lastMatchedIndex) {
-                    currentWordScore += 0.05;
-                }
-
                 if (currentWordScore > bestWordScore) {
                     bestWordScore = currentWordScore;
                     bestMatchIndex = sIdx;
                 }
-            });
+            }
 
             // Ngưỡng đạt 50% độ chính xác từ
             if (bestMatchIndex !== -1 && bestWordScore >= 0.50) {
-                lastMatchedIndex = bestMatchIndex;
-                const boostedScore = Math.min(1.0, bestWordScore);
+                spokenPointer = bestMatchIndex + 1;
+                const boostedScore = Math.min(1.0, bestWordScore + 0.15);
                 totalScore += boostedScore;
                 
                 htmlResult += `
