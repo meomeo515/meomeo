@@ -307,7 +307,7 @@
         .status-success { color: var(--success-color); }
         .status-error { color: var(--error-color); }
 
-        /* Nút Micro Thu Âm & Timer */
+        /* Nút Micro Thu Âm */
         .mic-container {
             display: flex;
             flex-direction: column;
@@ -349,17 +349,6 @@
             padding: 4px 12px;
             border-radius: 12px;
             margin-top: 8px;
-        }
-
-        .timer-display {
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: #dc2626;
-            background: #fee2e2;
-            padding: 2px 10px;
-            border-radius: 10px;
-            margin-top: 6px;
-            display: none;
         }
 
         @keyframes bounce {
@@ -418,16 +407,15 @@
         <div id="status-message" class="status-message">Sẵn sàng!</div>
     </div>
 
-    <!-- Nút Micro Thu Âm & Bộ Đếm Thời Gian -->
+    <!-- Nút Micro Thu Âm -->
     <div class="mic-container">
         <button id="mic-btn" class="mic-btn">🎙️</button>
         <div id="mic-hint" class="mic-hint">Bấm Mic để đọc</div>
-        <div id="timer-display" class="timer-display">⏱️ Thời gian: 12s</div>
     </div>
 </div>
 
 <script>
-    // Danh sách câu và Từ điển IPA chuẩn
+    // Danh sách câu và Từ điển IPA chuẩn xác
     const sentences = [
         "He does homework.",
         "I study English.",
@@ -458,9 +446,7 @@
 
     let currentIndex = 0;
     let isCurrentPassed = false;
-    let recordingTimer = null;
-    const RECORDING_DURATION = 12;
-    let timeLeft = RECORDING_DURATION;
+    let isRecording = false;
 
     // Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -473,6 +459,8 @@
         recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
+        // Tự động nhận diện khi người dùng dừng nói để chấm
+        recognition.continuous = false; 
     }
 
     const targetSentenceEl = document.getElementById('target-sentence');
@@ -482,7 +470,6 @@
     const statusMessageEl = document.getElementById('status-message');
     const micBtn = document.getElementById('mic-btn');
     const micHint = document.getElementById('mic-hint');
-    const timerDisplayEl = document.getElementById('timer-display');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
 
@@ -493,7 +480,6 @@
         scoreBadgeEl.style.display = "none";
         statusMessageEl.className = "status-message";
         statusMessageEl.innerText = "Sẵn sàng!";
-        timerDisplayEl.style.display = "none";
         
         isCurrentPassed = false;
         updateNavButtons();
@@ -572,7 +558,7 @@
 
     if (recognition) {
         micBtn.addEventListener('click', () => {
-            if (micBtn.classList.contains('recording')) {
+            if (isRecording) {
                 stopRecordingProcess();
             } else {
                 startRecordingProcess();
@@ -580,13 +566,15 @@
         });
 
         recognition.onstart = () => {
+            isRecording = true;
             micBtn.classList.add('recording');
             micBtn.innerText = "🛑";
-            micHint.innerText = "Bấm để dừng";
+            micHint.innerText = "Đang nghe... Nói xong Panda sẽ tự chấm!";
             statusMessageEl.className = "status-message status-recording";
-            statusMessageEl.innerText = "Panda đang nghe, bạn cứ thoải mái đọc nhé!";
+            statusMessageEl.innerText = "Panda đang lắng nghe, bạn cứ thoải mái đọc nhé!";
         };
 
+        // Khi nhận diện âm thanh xong (người đọc vừa dừng lại) -> Lập tức chấm
         recognition.onresult = (event) => {
             const spokenText = event.results[0][0].transcript;
             stopRecordingProcess();
@@ -596,33 +584,24 @@
         recognition.onerror = () => {
             stopRecordingProcess();
             statusMessageEl.className = "status-message status-error";
-            statusMessageEl.innerText = "Chưa nghe rõ, bấm Mic thử lại nhé!";
+            statusMessageEl.innerText = "Chưa nghe rõ, bấm Mic thử đọc lại nhé!";
+        };
+
+        recognition.onend = () => {
+            stopRecordingProcess();
         };
     }
 
     function startRecordingProcess() {
         try {
             recognition.start();
-            timeLeft = RECORDING_DURATION;
-            timerDisplayEl.innerText = `⏱️ Còn lại: ${timeLeft}s`;
-            timerDisplayEl.style.display = "inline-block";
-
-            clearInterval(recordingTimer);
-            recordingTimer = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    timerDisplayEl.innerText = `⏱️ Còn lại: ${timeLeft}s`;
-                } else {
-                    stopRecordingProcess();
-                }
-            }, 1000);
         } catch (e) {
             stopRecordingProcess();
         }
     }
 
     function stopRecordingProcess() {
-        clearInterval(recordingTimer);
+        isRecording = false;
         try { recognition.stop(); } catch(e){}
         resetMicUI();
     }
@@ -631,10 +610,9 @@
         micBtn.classList.remove('recording');
         micBtn.innerText = "🎙️";
         micHint.innerText = "Bấm Mic để đọc";
-        timerDisplayEl.style.display = "none";
     }
 
-    // Thuật toán Levenshtein đo độ tương đồng
+    // Thuật toán Levenshtein đo độ tương đồng ký tự IPA
     function getSimilarity(a, b) {
         if (!a || !b) return 0;
         const cleanA = a.replace(/[/ˈˌ.ː]/g, "");
@@ -661,43 +639,42 @@
         return maxLen === 0 ? 1 : ((maxLen - matrix[cleanB.length][cleanA.length]) / maxLen);
     }
 
-    // Algorithm nhẹ nhàng & khuyến khích người học
+    // Thuật toán chấm phát âm Tỉ Mỉ & Chuẩn Xác từng từ
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
         const cleanTarget = targetSentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
         const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
 
-        const targetWords = cleanTarget.split(/\s+/);
-        const spokenWords = cleanSpoken.split(/\s+/);
+        const targetWords = cleanTarget.split(/\s+/).filter(Boolean);
+        const spokenWords = cleanSpoken.split(/\s+/).filter(Boolean);
 
         let totalIpaScore = 0;
         let htmlResult = "";
-        let usedSpokenIndices = new Set();
+        let spokenPointer = 0; // Đánh dấu vị trí từ đã khớp trong câu đọc
 
         targetWords.forEach((targetWord, index) => {
             const targetIPA = dictionaryIPA[targetWord] || targetWord;
             
-            // Tìm từ khớp nhất trong toàn bộ câu đọc (Linh hoạt vị trí từ)
             let bestMatchIndex = -1;
             let maxSimilarity = 0;
 
-            spokenWords.forEach((spokenWord, sIdx) => {
-                if (usedSpokenIndices.has(sIdx)) return;
+            // Chấm theo thứ tự từ đọc để đảm bảo độ chuẩn xác theo ngữ cảnh
+            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 3, spokenWords.length); sIdx++) {
+                const spokenWord = spokenWords[sIdx];
                 const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
                 
-                // Trực tiếp bằng nhau hoặc tính độ tương đồng IPA
                 let sim = (targetWord === spokenWord) ? 1 : getSimilarity(targetIPA, spokenIPA);
                 
                 if (sim > maxSimilarity) {
                     maxSimilarity = sim;
                     bestMatchIndex = sIdx;
                 }
-            });
+            }
 
-            // Nếu tìm thấy từ tương đối giống
-            if (bestMatchIndex !== -1 && maxSimilarity >= 0.55) {
-                usedSpokenIndices.add(bestMatchIndex);
+            // Yêu cầu độ tương đồng >= 65% mới tính là đọc đúng từ đó
+            if (bestMatchIndex !== -1 && maxSimilarity >= 0.65) {
+                spokenPointer = bestMatchIndex + 1; // Nhích con trỏ tới từ tiếp theo
                 totalIpaScore += maxSimilarity;
                 
                 htmlResult += `
@@ -706,10 +683,10 @@
                         <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             } else {
-                // Thử gán theo vị trí mặc định để hiện thông báo gợi ý nếu có
-                const directSpoken = spokenWords[index] || "";
+                // Nếu sai hoặc đọc thiếu
+                const directSpoken = spokenWords[spokenPointer] || "";
                 const directIPA = dictionaryIPA[directSpoken] || directSpoken;
-                const errorHint = directIPA ? `Nghe giống: /${directIPA}/` : "Thiếu từ";
+                const errorHint = directSpoken ? `Đọc thành: /${directIPA}/` : "Chưa đọc";
 
                 htmlResult += `
                     <div class="word-item">
@@ -720,28 +697,21 @@
             }
         });
 
-        // Điểm cơ sở tính theo tỷ lệ các từ đạt
-        let rawPercentage = (totalIpaScore / targetWords.length) * 100;
-        
-        // Thưởng điểm nhẹ nhàng tạo động lực (+15% thưởng nếu đọc đủ ý)
-        if (usedSpokenIndices.size >= Math.ceil(targetWords.length * 0.5)) {
-            rawPercentage += 15;
-        }
-
-        const finalPercentage = Math.min(100, Math.round(rawPercentage));
+        // Điểm tính theo tỉ lệ chính xác thực tế
+        const finalPercentage = Math.round((totalIpaScore / targetWords.length) * 100);
 
         scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Chỉ cần từ 50% trở lên là ĐẠT (không quá khắt khe)
-        if (finalPercentage >= 50) {
+        // Điểm đạt: Từ 70% trở lên (chấm cẩn thận & chuẩn xác hơn)
+        if (finalPercentage >= 70) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
             
             if (currentIndex < sentences.length - 1) {
-                statusMessageEl.innerText = "🎉 Giỏi quá! Bấm '❯' để sang câu tiếp theo.";
+                statusMessageEl.innerText = "🎉 Tuyệt vời! Bấm '❯' để sang câu tiếp theo.";
             } else {
                 statusMessageEl.innerText = "🏆 Hoàn thành xuất sắc bài luyện nói!";
             }
@@ -749,7 +719,7 @@
             playSound('error');
             isCurrentPassed = false;
             statusMessageEl.className = "status-message status-error";
-            statusMessageEl.innerText = "👏 Bạn đọc gần đúng rồi, nghe mẫu rồi thử lại nhé!";
+            statusMessageEl.innerText = "👏 Bạn chú ý các từ đỏ nhé, nghe mẫu rồi thử lại!";
         }
 
         updateNavButtons();
