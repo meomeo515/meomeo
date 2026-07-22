@@ -38,7 +38,6 @@
             overflow-x: hidden;
         }
 
-        /* --- Background Decoration --- */
         .cloud {
             position: fixed;
             background: rgba(255, 255, 255, 0.85);
@@ -76,7 +75,6 @@
             100% { transform: translateX(calc(100vw + 250px)); }
         }
 
-        /* --- Main Container --- */
         .app-container {
             background: var(--card-bg);
             padding: 24px 20px;
@@ -346,14 +344,14 @@
             margin-top: 8px;
         }
 
-        /* --- Reward Overlay (Cây trúc & Panda) --- */
+        /* --- Màn hình thưởng Bamboo --- */
         .reward-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.96);
+            background: rgba(255, 255, 255, 0.98);
             border-radius: 28px;
             display: none;
             flex-direction: column;
@@ -372,8 +370,8 @@
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            gap: 15px;
-            margin: 15px 0;
+            gap: 12px;
+            margin: 20px 0;
         }
 
         .bamboo-stalk {
@@ -381,6 +379,10 @@
             animation: growBamboo 0.8s ease-out forwards;
             transform-origin: bottom;
         }
+
+        .bamboo-stalk:nth-child(1) { animation-delay: 0.1s; }
+        .bamboo-stalk:nth-child(3) { animation-delay: 0.3s; }
+        .bamboo-stalk:nth-child(4) { animation-delay: 0.5s; }
 
         .panda-reward {
             font-size: 5rem;
@@ -496,7 +498,9 @@
         <div class="reward-subtitle">Bạn đã tặng Panda một rừng trúc xanh mướt!</div>
         <div class="reward-bamboo-container">
             <span class="bamboo-stalk">🎋</span>
+            <span class="bamboo-stalk">🎋</span>
             <span class="panda-reward">🐼</span>
+            <span class="bamboo-stalk">🎋</span>
             <span class="bamboo-stalk">🎋</span>
         </div>
         <button class="btn-restart" onclick="restartApp()">Luyện lại từ đầu 🔄</button>
@@ -513,40 +517,20 @@
     ];
 
     const dictionaryIPA = {
-        "he": "hiː",
-        "does": "dʌz",
-        "homework": "hoʊm.wɝːk",
-        "i": "aɪ",
-        "study": "stʌd.i",
-        "english": "ɪŋ.ɡlɪʃ",
-        "every": "ev.ri",
-        "single": "sɪŋ.ɡəl",
-        "day": "deɪ",
-        "sally": "sæl.i",
-        "answers": "æn.sɚz",
-        "the": "ðə",
-        "question": "kwes.tʃən",
-        "carefully": "ker.fəl.i",
-        "wear": "wer",
-        "my": "maɪ",
-        "uniform": "juː.nə.fɔːrm",
-        "when": "wen",
-        "go": "ɡoʊ",
-        "to": "tuː",
-        "school": "skuːl",
-        "teacher": "tiː.tʃɚ",
-        "writes": "raɪts",
-        "on": "ɑːn",
-        "board": "bɔːrd",
-        "with": "wɪð",
-        "green": "ɡriːn",
-        "chalk": "tʃɑːk"
+        "he": "hiː", "does": "dʌz", "homework": "hoʊm.wɝːk", "i": "aɪ",
+        "study": "stʌd.i", "english": "ɪŋ.ɡlɪʃ", "every": "ev.ri", "single": "sɪŋ.ɡəl",
+        "day": "deɪ", "sally": "sæl.i", "answers": "æn.sɚz", "the": "ðə",
+        "question": "kwes.tʃən", "carefully": "ker.fəl.i", "wear": "wer", "my": "maɪ",
+        "uniform": "juː.nə.fɔːrm", "when": "wen", "go": "ɡoʊ", "to": "tuː",
+        "school": "skuːl", "teacher": "tiː.tʃɚ", "writes": "raɪts", "on": "ɑːn",
+        "board": "bɔːrd", "with": "wɪð", "green": "ɡriːn", "chalk": "tʃɑːk"
     };
 
     let currentIndex = 0;
     let isCurrentPassed = false;
     let isRecording = false;
-    let recordingTimeout = null;
+    let silenceTimer = null;
+    let maxRecordingTimer = null;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
@@ -556,9 +540,9 @@
     } else {
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
-        recognition.interimResults = false;
+        recognition.interimResults = true; // Bật interim để hỗ trợ ngắt nghỉ hơi mà không mất từ
         recognition.maxAlternatives = 1;
-        recognition.continuous = true; // Bật continuous để hỗ trợ đọc các câu dài
+        recognition.continuous = true;
     }
 
     const targetSentenceEl = document.getElementById('target-sentence');
@@ -572,6 +556,8 @@
     const nextBtn = document.getElementById('next-btn');
     const rewardOverlay = document.getElementById('reward-overlay');
 
+    let accumulatedTranscript = "";
+
     function loadSentence() {
         targetSentenceEl.innerText = sentences[currentIndex];
         progressBarEl.innerText = `Câu ${currentIndex + 1} / ${sentences.length}`;
@@ -581,6 +567,7 @@
         statusMessageEl.innerText = "Sẵn sàng!";
         
         isCurrentPassed = false;
+        accumulatedTranscript = "";
         updateNavButtons();
     }
 
@@ -644,7 +631,6 @@
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.5);
             } else if (type === 'fanfare') {
-                // Nhạc chúc mừng hoàn thành bài học
                 const notes = [523.25, 659.25, 783.99, 1046.50];
                 notes.forEach((freq, idx) => {
                     const noteOsc = ctx.createOscillator();
@@ -681,31 +667,37 @@
 
         recognition.onstart = () => {
             isRecording = true;
+            accumulatedTranscript = "";
             micBtn.classList.add('recording');
             micBtn.innerText = "🛑";
-            micHint.innerText = "Đang nghe... Bấm 🛑 khi hoàn thành";
+            micHint.innerText = "Đang nghe... Bạn cứ thong thả đọc";
             statusMessageEl.className = "status-message status-recording";
-            statusMessageEl.innerText = "Panda đang lắng nghe, bạn cứ thoải mái đọc nhé!";
+            statusMessageEl.innerText = "Panda đang nghe! Thoải mái ngắt nghỉ hơi nhé...";
 
-            // Tự động điều chỉnh thời gian thu âm theo số từ trong câu (tối thiểu 6 giây, tối đa 15 giây)
+            // Thời gian chờ tối đa cho các câu dài hơn
             const wordCount = sentences[currentIndex].split(' ').length;
-            const dynamicTimeout = Math.max(6000, wordCount * 1200);
+            const maxDuration = Math.max(10000, wordCount * 2500);
 
-            if (recordingTimeout) clearTimeout(recordingTimeout);
-            recordingTimeout = setTimeout(() => {
-                if (isRecording) {
-                    stopRecordingProcess();
-                }
-            }, dynamicTimeout);
+            if (maxRecordingTimer) clearTimeout(maxRecordingTimer);
+            maxRecordingTimer = setTimeout(() => {
+                if (isRecording) stopRecordingProcess();
+            }, maxDuration);
         };
 
         recognition.onresult = (event) => {
-            let spokenText = "";
+            let currentSpeech = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-                spokenText += event.results[i][0].transcript + " ";
+                currentSpeech += event.results[i][0].transcript + " ";
             }
-            stopRecordingProcess();
-            analyzeIPASpeech(spokenText.trim());
+            accumulatedTranscript = currentSpeech;
+
+            // Cho phép tạm dừng ngắt hơi (3 giây im lặng mới tự ngắt)
+            if (silenceTimer) clearTimeout(silenceTimer);
+            silenceTimer = setTimeout(() => {
+                if (isRecording && accumulatedTranscript.trim().length > 0) {
+                    stopRecordingProcess();
+                }
+            }, 3000);
         };
 
         recognition.onerror = () => {
@@ -731,9 +723,14 @@
 
     function stopRecordingProcess() {
         isRecording = false;
-        if (recordingTimeout) clearTimeout(recordingTimeout);
+        if (silenceTimer) clearTimeout(silenceTimer);
+        if (maxRecordingTimer) clearTimeout(maxRecordingTimer);
         try { recognition.stop(); } catch(e){}
         resetMicUI();
+
+        if (accumulatedTranscript.trim().length > 0) {
+            analyzeIPASpeech(accumulatedTranscript.trim());
+        }
     }
 
     function resetMicUI() {
@@ -742,7 +739,7 @@
         micHint.innerText = "Bấm Mic để đọc";
     }
 
-    // Levenshtein đếm khoảng cách giữa 2 chuỗi
+    // Levenshtein đếm khoảng cách linh hoạt
     function getLevenshteinDistance(a, b) {
         if (!a || !b) return Math.max(a ? a.length : 0, b ? b.length : 0);
         const matrix = [];
@@ -765,12 +762,14 @@
         return matrix[b.length][a.length];
     }
 
-    // Algorithmic Pronunciation Matcher (Text + IPA)
+    // Thuật toán chấm phát âm thông minh & nương tay câu 1
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
+        // Chuẩn hóa và lọc từ rác/từ nối tạm ngắt nghỉ
         const cleanTarget = targetSentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-        const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+        const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+                                       .replace(/\b(uh|um|ah|like|er)\b/g, ""); 
 
         const targetWords = cleanTarget.split(/\s+/).filter(Boolean);
         const spokenWords = cleanSpoken.split(/\s+/).filter(Boolean);
@@ -779,23 +778,32 @@
         let htmlResult = "";
         let spokenPointer = 0;
 
+        // CẤU HÌNH ĐỘ KHÓ THEO CÂU:
+        // Câu 0 (Câu 1): Chấm nhẹ tay (ngưỡng vượt 40%, cộng điểm thưởng)
+        // Câu 1-4 (Câu 2-5): Chấm chuẩn xác hơn (ngưỡng 55%)
+        const isEasySentence = (currentIndex === 0);
+        const wordPassThreshold = isEasySentence ? 0.35 : 0.48;
+
         targetWords.forEach((targetWord) => {
             const targetIPA = dictionaryIPA[targetWord] || targetWord;
             let bestWordScore = 0;
             let bestMatchIndex = -1;
 
-            // Tìm kiếm trong phạm vi cửa sổ 4 từ để hỗ trợ câu dài
-            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 4, spokenWords.length); sIdx++) {
+            // Tìm kiếm trong cửa sổ trượt rộng (đến 6 từ) hỗ trợ người đọc bị ngắt nhịp
+            const searchWindow = Math.min(spokenPointer + 6, spokenWords.length);
+            for (let sIdx = spokenPointer; sIdx < searchWindow; sIdx++) {
                 const spokenWord = spokenWords[sIdx];
                 let currentWordScore = 0;
 
                 if (targetWord === spokenWord) {
                     currentWordScore = 1.0;
                 } else {
+                    // Tương đồng ký tự
                     const textDist = getLevenshteinDistance(targetWord, spokenWord);
                     const maxTextLen = Math.max(targetWord.length, spokenWord.length);
                     const textSim = (maxTextLen - textDist) / maxTextLen;
 
+                    // Tương đồng IPA phát âm
                     const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
                     const cleanTargetIPA = targetIPA.replace(/[/ˈˌ.ː]/g, "");
                     const cleanSpokenIPA = spokenIPA.replace(/[/ˈˌ.ː]/g, "");
@@ -813,10 +821,11 @@
                 }
             }
 
-            // Ngưỡng đạt 50% độ chính xác từ
-            if (bestMatchIndex !== -1 && bestWordScore >= 0.50) {
+            if (bestMatchIndex !== -1 && bestWordScore >= wordPassThreshold) {
                 spokenPointer = bestMatchIndex + 1;
-                const boostedScore = Math.min(1.0, bestWordScore + 0.15);
+                // Nếu là câu 1, nương tay tăng thưởng điểm
+                const boost = isEasySentence ? 0.25 : 0.12;
+                const boostedScore = Math.min(1.0, bestWordScore + boost);
                 totalScore += boostedScore;
                 
                 htmlResult += `
@@ -839,7 +848,10 @@
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        if (finalPercentage >= 50) {
+        // Ngưỡng đạt bài tập: Câu 1 nương tay 40%, các câu sau 55%
+        const sentencePassPercentage = isEasySentence ? 40 : 55;
+
+        if (finalPercentage >= sentencePassPercentage) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
