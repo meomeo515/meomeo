@@ -82,7 +82,7 @@
             padding: 24px 20px;
             border-radius: 28px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
             text-align: center;
             border: 4px solid #86efac;
@@ -197,7 +197,7 @@
         }
 
         .target-sentence {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: bold;
             color: #0f172a;
             margin-bottom: 10px;
@@ -249,7 +249,7 @@
             flex-wrap: wrap;
             justify-content: center;
             align-items: flex-start;
-            gap: 10px;
+            gap: 8px;
         }
 
         .word-item {
@@ -260,6 +260,12 @@
             padding: 6px 8px;
             border-radius: 10px;
             border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .word-item:hover {
+            transform: translateY(-2px);
         }
 
         .word-correct {
@@ -340,6 +346,77 @@
             margin-top: 8px;
         }
 
+        /* --- Reward Overlay (Cây trúc & Panda) --- */
+        .reward-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 28px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .reward-overlay.active {
+            display: flex;
+        }
+
+        .reward-bamboo-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .bamboo-stalk {
+            font-size: 3.5rem;
+            animation: growBamboo 0.8s ease-out forwards;
+            transform-origin: bottom;
+        }
+
+        .panda-reward {
+            font-size: 5rem;
+            animation: pandaEat 1s ease-in-out infinite alternate;
+        }
+
+        .reward-title {
+            font-size: 1.8rem;
+            color: var(--panda-dark-green);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .reward-subtitle {
+            font-size: 1rem;
+            color: #475569;
+            margin-bottom: 20px;
+        }
+
+        .btn-restart {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .btn-restart:active {
+            transform: scale(0.95);
+        }
+
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
@@ -355,6 +432,21 @@
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        @keyframes growBamboo {
+            0% { transform: scaleY(0); }
+            100% { transform: scaleY(1); }
+        }
+
+        @keyframes pandaEat {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
@@ -397,18 +489,29 @@
         <button id="mic-btn" class="mic-btn">🎙️</button>
         <div id="mic-hint" class="mic-hint">Bấm Mic để đọc</div>
     </div>
+
+    <!-- Màn hình thưởng hoàn thành -->
+    <div id="reward-overlay" class="reward-overlay">
+        <div class="reward-title">🎉 HOÀN THÀNH XUẤT SẮC!</div>
+        <div class="reward-subtitle">Bạn đã tặng Panda một rừng trúc xanh mướt!</div>
+        <div class="reward-bamboo-container">
+            <span class="bamboo-stalk">🎋</span>
+            <span class="panda-reward">🐼</span>
+            <span class="bamboo-stalk">🎋</span>
+        </div>
+        <button class="btn-restart" onclick="restartApp()">Luyện lại từ đầu 🔄</button>
+    </div>
 </div>
 
 <script>
     const sentences = [
         "He does homework.",
-        "I study English.",
-        "Sally answers the question.",
-        "I wear my uniform.",
-        "My teacher writes on the board."
+        "I study English every single day.",
+        "Sally answers the question carefully.",
+        "I wear my uniform when I go to school.",
+        "My teacher writes on the board with green chalk."
     ];
 
-    // Từ điển IPA đã cập nhật đầy đủ các từ trong bài
     const dictionaryIPA = {
         "he": "hiː",
         "does": "dʌz",
@@ -416,22 +519,34 @@
         "i": "aɪ",
         "study": "stʌd.i",
         "english": "ɪŋ.ɡlɪʃ",
+        "every": "ev.ri",
+        "single": "sɪŋ.ɡəl",
+        "day": "deɪ",
         "sally": "sæl.i",
         "answers": "æn.sɚz",
         "the": "ðə",
         "question": "kwes.tʃən",
+        "carefully": "ker.fəl.i",
         "wear": "wer",
         "my": "maɪ",
         "uniform": "juː.nə.fɔːrm",
+        "when": "wen",
+        "go": "ɡoʊ",
+        "to": "tuː",
+        "school": "skuːl",
         "teacher": "tiː.tʃɚ",
         "writes": "raɪts",
         "on": "ɑːn",
-        "board": "bɔːrd"
+        "board": "bɔːrd",
+        "with": "wɪð",
+        "green": "ɡriːn",
+        "chalk": "tʃɑːk"
     };
 
     let currentIndex = 0;
     let isCurrentPassed = false;
     let isRecording = false;
+    let recordingTimeout = null;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
@@ -443,7 +558,7 @@
         recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        recognition.continuous = false; 
+        recognition.continuous = true; // Bật continuous để hỗ trợ đọc các câu dài
     }
 
     const targetSentenceEl = document.getElementById('target-sentence');
@@ -455,6 +570,7 @@
     const micHint = document.getElementById('mic-hint');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
+    const rewardOverlay = document.getElementById('reward-overlay');
 
     function loadSentence() {
         targetSentenceEl.innerText = sentences[currentIndex];
@@ -472,12 +588,8 @@
         prevBtn.disabled = (currentIndex === 0);
         
         if (isCurrentPassed) {
-            nextBtn.disabled = (currentIndex === sentences.length - 1);
-            if (currentIndex < sentences.length - 1) {
-                nextBtn.classList.add('next-unlocked');
-            } else {
-                nextBtn.classList.remove('next-unlocked');
-            }
+            nextBtn.disabled = false;
+            nextBtn.classList.add('next-unlocked');
         } else {
             nextBtn.disabled = true;
             nextBtn.classList.remove('next-unlocked');
@@ -493,10 +605,14 @@
     }
 
     function nextSentence() {
-        if (currentIndex < sentences.length - 1 && isCurrentPassed) {
-            stopRecordingProcess();
-            currentIndex++;
-            loadSentence();
+        if (currentIndex < sentences.length - 1) {
+            if (isCurrentPassed) {
+                stopRecordingProcess();
+                currentIndex++;
+                loadSentence();
+            }
+        } else if (isCurrentPassed) {
+            showRewardScreen();
         }
     }
 
@@ -527,6 +643,21 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.5);
+            } else if (type === 'fanfare') {
+                // Nhạc chúc mừng hoàn thành bài học
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const noteOsc = ctx.createOscillator();
+                    const noteGain = ctx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(ctx.destination);
+                    noteOsc.type = 'triangle';
+                    noteOsc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.15);
+                    noteGain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.15);
+                    noteGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.15 + 0.4);
+                    noteOsc.start(ctx.currentTime + idx * 0.15);
+                    noteOsc.stop(ctx.currentTime + idx * 0.15 + 0.4);
+                });
             } else {
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(220, ctx.currentTime);
@@ -552,15 +683,29 @@
             isRecording = true;
             micBtn.classList.add('recording');
             micBtn.innerText = "🛑";
-            micHint.innerText = "Đang nghe... Nói xong Panda sẽ tự chấm!";
+            micHint.innerText = "Đang nghe... Bấm 🛑 khi hoàn thành";
             statusMessageEl.className = "status-message status-recording";
             statusMessageEl.innerText = "Panda đang lắng nghe, bạn cứ thoải mái đọc nhé!";
+
+            // Tự động điều chỉnh thời gian thu âm theo số từ trong câu (tối thiểu 6 giây, tối đa 15 giây)
+            const wordCount = sentences[currentIndex].split(' ').length;
+            const dynamicTimeout = Math.max(6000, wordCount * 1200);
+
+            if (recordingTimeout) clearTimeout(recordingTimeout);
+            recordingTimeout = setTimeout(() => {
+                if (isRecording) {
+                    stopRecordingProcess();
+                }
+            }, dynamicTimeout);
         };
 
         recognition.onresult = (event) => {
-            const spokenText = event.results[0][0].transcript;
+            let spokenText = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                spokenText += event.results[i][0].transcript + " ";
+            }
             stopRecordingProcess();
-            analyzeIPASpeech(spokenText);
+            analyzeIPASpeech(spokenText.trim());
         };
 
         recognition.onerror = () => {
@@ -570,7 +715,9 @@
         };
 
         recognition.onend = () => {
-            stopRecordingProcess();
+            if (isRecording) {
+                stopRecordingProcess();
+            }
         };
     }
 
@@ -584,6 +731,7 @@
 
     function stopRecordingProcess() {
         isRecording = false;
+        if (recordingTimeout) clearTimeout(recordingTimeout);
         try { recognition.stop(); } catch(e){}
         resetMicUI();
     }
@@ -617,7 +765,7 @@
         return matrix[b.length][a.length];
     }
 
-    // Thuật toán chấm phát âm linh hoạt dành cho Beginner
+    // Algorithmic Pronunciation Matcher (Text + IPA)
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
@@ -636,21 +784,18 @@
             let bestWordScore = 0;
             let bestMatchIndex = -1;
 
-            // Tìm từ khớp nhất trong khoảng 3 từ xung quanh vị trí đọc
-            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 3, spokenWords.length); sIdx++) {
+            // Tìm kiếm trong phạm vi cửa sổ 4 từ để hỗ trợ câu dài
+            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 4, spokenWords.length); sIdx++) {
                 const spokenWord = spokenWords[sIdx];
                 let currentWordScore = 0;
 
-                // 1. Trường hợp khớp từ chuẩn
                 if (targetWord === spokenWord) {
                     currentWordScore = 1.0;
                 } else {
-                    // 2. Tính độ tương đồng theo chữ cái (chống mất s/es hoặc đọc lệch nhẹ)
                     const textDist = getLevenshteinDistance(targetWord, spokenWord);
                     const maxTextLen = Math.max(targetWord.length, spokenWord.length);
                     const textSim = (maxTextLen - textDist) / maxTextLen;
 
-                    // 3. Tính độ tương đồng theo IPA
                     const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
                     const cleanTargetIPA = targetIPA.replace(/[/ˈˌ.ː]/g, "");
                     const cleanSpokenIPA = spokenIPA.replace(/[/ˈˌ.ː]/g, "");
@@ -659,7 +804,6 @@
                     const maxIpaLen = Math.max(cleanTargetIPA.length, cleanSpokenIPA.length);
                     const ipaSim = (maxIpaLen - ipaDist) / maxIpaLen;
 
-                    // Lấy điểm số cao nhất giữa Text và IPA
                     currentWordScore = Math.max(textSim, ipaSim);
                 }
 
@@ -669,35 +813,32 @@
                 }
             }
 
-            // Ngưỡng vượt qua từ mềm dẻo cho Beginner: >= 50% độ chính xác từ
+            // Ngưỡng đạt 50% độ chính xác từ
             if (bestMatchIndex !== -1 && bestWordScore >= 0.50) {
                 spokenPointer = bestMatchIndex + 1;
-                // Thưởng điểm nhẹ để giúp beginner dễ vượt qua hơn
                 const boostedScore = Math.min(1.0, bestWordScore + 0.15);
                 totalScore += boostedScore;
                 
                 htmlResult += `
-                    <div class="word-item">
+                    <div class="word-item" onclick="speakText('${targetWord}')">
                         <span class="word-correct">${targetWord}</span>
                         <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             } else {
                 htmlResult += `
-                    <div class="word-item">
+                    <div class="word-item" onclick="speakText('${targetWord}')">
                         <span class="word-incorrect">${targetWord}</span>
                         <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             }
         });
 
-        // Điểm trung bình phần trăm của cả câu
         const finalPercentage = Math.round((totalScore / targetWords.length) * 100);
 
         scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Đạt từ 50% trở lên là PASS
         if (finalPercentage >= 50) {
             playSound('success');
             isCurrentPassed = true;
@@ -706,16 +847,27 @@
             if (currentIndex < sentences.length - 1) {
                 statusMessageEl.innerText = "🎉 Tuyệt vời! Bấm '❯' để sang câu tiếp theo.";
             } else {
-                statusMessageEl.innerText = "🏆 Hoàn thành xuất sắc bài luyện nói!";
+                statusMessageEl.innerText = "🏆 Hoàn thành câu cuối! Bấm '❯' để nhận thưởng!";
             }
         } else {
             playSound('error');
             isCurrentPassed = false;
             statusMessageEl.className = "status-message status-error";
-            statusMessageEl.innerText = "👏 Bạn chú ý các từ đỏ nhé, nghe mẫu rồi thử lại!";
+            statusMessageEl.innerText = "👏 Bạn chú ý các từ đỏ nhé, bấm vào từ để nghe lại!";
         }
 
         updateNavButtons();
+    }
+
+    function showRewardScreen() {
+        rewardOverlay.classList.add('active');
+        playSound('fanfare');
+    }
+
+    function restartApp() {
+        rewardOverlay.classList.remove('active');
+        currentIndex = 0;
+        loadSentence();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
