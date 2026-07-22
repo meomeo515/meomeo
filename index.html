@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>English Campus Tour Guide - Beginner</title>
+    <title>Panda Speaks - Học Phát Âm Tiếng Anh</title>
     <style>
         :root {
-            --primary-color: #2b6cb0;
-            --primary-hover: #2c5282;
-            --bg-color: #f7fafc;
+            --panda-green: #4caf50;
+            --panda-dark: #2d3748;
+            --panda-light-bg: #f0fdf4;
             --card-bg: #ffffff;
-            --text-main: #2d3748;
-            --text-muted: #718096;
-            --accent-color: #dd6b20;
-            --success-color: #38a169;
-            --error-color: #e53e3e;
+            --text-main: #1a202c;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --accent-yellow: #facc15;
         }
 
         * {
@@ -25,198 +24,181 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+            background-color: var(--panda-light-bg);
+            /* Phông nền Panda dễ thương */
+            background-image: radial-gradient(#bbf7d0 2px, transparent 2px);
+            background-size: 24px 24px;
             color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
             padding: 12px;
-            padding-bottom: 110px; /* Chừa khoảng trống cho nút Mic cố định phía dưới */
+            padding-bottom: 120px;
         }
 
         .app-container {
             background: var(--card-bg);
-            padding: 16px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            max-width: 500px;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            max-width: 480px;
             width: 100%;
             text-align: center;
-            border: 1px solid #e2e8f0;
+            border: 4px solid #bbf7d0;
             margin-top: 10px;
+            position: relative;
+        }
+
+        /* Đầu gấu Panda dễ thương */
+        .header-avatar {
+            font-size: 4rem;
+            line-height: 1;
+            margin-bottom: 5px;
+            animation: bounce 2s infinite;
         }
 
         header h1 {
-            font-size: 1.3rem;
-            color: var(--primary-color);
-            margin-bottom: 2px;
+            font-size: 1.5rem;
+            color: #15803d;
+            margin-bottom: 4px;
+            font-weight: 800;
         }
 
         header p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-bottom: 16px;
         }
 
-        .media-container {
-            width: 100%;
-            height: 200px;
-            background-color: #edf2f7;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 12px;
-        }
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .character-bubble {
-            background: #ebf8ff;
-            border-left: 4px solid var(--primary-color);
-            padding: 12px;
-            border-radius: 8px;
+        /* Khung chứa danh sách câu hỏi */
+        .practice-card {
+            background: #f8fafc;
+            border: 2px dashed #86efac;
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 16px;
             text-align: left;
-            margin-bottom: 12px;
         }
 
-        .character-name {
+        .card-title {
+            font-size: 0.85rem;
             font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 4px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
+            color: #166534;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .story-text {
-            font-size: 0.95rem;
-            line-height: 1.4;
-            font-style: italic;
-        }
-
-        .interaction-panel {
-            background: #fffaf0;
-            padding: 14px;
-            border-radius: 10px;
-            text-align: left;
-            margin-bottom: 12px;
-            border: 1px dashed #feebc8;
-        }
-
-        .interaction-panel p {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #dd6b20;
-            font-size: 0.85rem;
-        }
-
-        .option-item {
+        .sentence-item {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #ffffff;
-            border: 1px solid #edf2f7;
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-
-        .option-text {
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .listen-btn {
-            background: #ebf8ff;
-            border: 1px solid #bee3f8;
-            color: var(--primary-color);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 0.8rem;
+            transition: all 0.2s;
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: 600;
         }
 
-        .listen-btn:active {
-            background: #bbe3fe;
+        .sentence-item.active {
+            border-color: var(--panda-green);
+            background: #f0fdf4;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
         }
 
-        /* Thanh phản hồi kết quả phát âm từng từ */
-        .feedback-box {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-            text-align: left;
-        }
-
-        .feedback-title {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+        .sentence-text {
+            font-size: 1.05rem;
             font-weight: bold;
+            color: #1e293b;
+        }
+
+        .btn-listen {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #15803d;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.1s;
+        }
+
+        .btn-listen:active {
+            transform: scale(0.9);
+            background: #bbf7d0;
+        }
+
+        /* Khung phân tích chấm điểm từng từ */
+        .result-box {
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
 
         .word-analysis {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             font-weight: bold;
-            line-height: 1.6;
-            min-height: 30px;
+            line-height: 1.8;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
         }
 
+        /* Chữ đúng màu XANH LÁ */
         .word-correct {
             color: var(--success-color);
-            background: #f0fff4;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #c6f6d5;
-            margin-right: 4px;
-            display: inline-block;
+            background: #dcfce7;
+            padding: 2px 8px;
+            border-radius: 8px;
+            border: 1px solid #86efac;
         }
 
+        /* Chữ sai màu ĐỎ */
         .word-incorrect {
             color: var(--error-color);
-            background: #fff5f5;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #fed7d7;
-            margin-right: 4px;
-            display: inline-block;
+            background: #fee2e2;
+            padding: 2px 8px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
             text-decoration: line-through;
         }
 
-        .status-text {
-            font-size: 0.85rem;
-            margin-top: 6px;
-            font-weight: 600;
+        .status-message {
+            font-size: 0.9rem;
+            margin-top: 8px;
+            font-weight: bold;
         }
-        .status-active { color: var(--accent-color); animation: pulse 1.5s infinite; }
+        .status-recording { color: #d97706; animation: pulse 1s infinite; }
         .status-success { color: var(--success-color); }
         .status-error { color: var(--error-color); }
 
-        .restart-btn {
-            background-color: transparent;
-            color: var(--text-muted);
-            border: 1px solid #e2e8f0;
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-
-        /* Micro cố định ở giữa góc dưới */
-        .floating-controls {
+        /* Nút Micro Cố Định Dưới Màn Hình */
+        .mic-container {
             position: fixed;
-            bottom: 16px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
@@ -226,15 +208,15 @@
         }
 
         .mic-btn {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #22c55e, #15803d);
             color: white;
-            border: none;
-            width: 64px;
-            height: 64px;
+            border: 4px solid #ffffff;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
-            font-size: 1.8rem;
+            font-size: 2.2rem;
             cursor: pointer;
-            box-shadow: 0 6px 16px rgba(43, 108, 176, 0.4);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -246,20 +228,24 @@
         }
 
         .mic-btn.recording {
-            background: var(--error-color);
-            box-shadow: 0 6px 16px rgba(229, 62, 62, 0.5);
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5);
             animation: pulse-ring 1.2s infinite;
         }
 
-        .mic-label {
-            font-size: 0.75rem;
+        .mic-hint {
+            font-size: 0.8rem;
             font-weight: bold;
-            background: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 3px 8px;
+            background: #1e293b;
+            color: #ffffff;
+            padding: 4px 12px;
             border-radius: 12px;
-            margin-top: 6px;
-            white-space: nowrap;
+            margin-top: 8px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
         @keyframes pulse {
@@ -269,111 +255,59 @@
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); }
-            70% { box-shadow: 0 0 0 12px rgba(229, 62, 62, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <div class="header-avatar">🐼</div>
     <header>
-        <h1>🎙️ Campus Tour Guide</h1>
-        <p>Luyện nói tiếng Anh Beginner</p>
+        <h1>Panda Speaks</h1>
+        <p>Bấm loa nghe trước 🔊 - Nhấn Mic đọc sau 🎙️</p>
     </header>
-    
-    <div class="media-container">
-        <img id="scenery-img" src="cong_dh.jpg" alt="Campus">
+
+    <!-- Danh sách 5 câu học sinh cấp 1 -->
+    <div class="practice-card">
+        <div class="card-title">📌 CHỌN CÂU CẦN LUYỆN ĐỌC:</div>
+        <div id="sentence-list"></div>
     </div>
 
-    <div class="character-bubble">
-        <div class="character-name">David (Visitor)</div>
-        <div id="story" class="story-text">...</div>
+    <!-- Khung hiển thị chấm lỗi phát âm từng từ -->
+    <div class="result-box">
+        <div class="result-label">Kết quả bé đọc:</div>
+        <div id="word-analysis" class="word-analysis">👉 Hãy nhấn Micro để nói</div>
+        <div id="status-message" class="status-message">Sẵn sàng!</div>
     </div>
-
-    <div class="interaction-panel" id="interaction-box">
-        <p>🔊 Nghe mẫu và chọn 1 câu để đọc:</p>
-        <div id="options-list"></div>
-    </div>
-
-    <!-- Thanh phân tích chấm điểm phát âm từng từ -->
-    <div class="feedback-box">
-        <div class="feedback-title">KẾT QUẢ PHÁT ÂM:</div>
-        <div id="word-analysis" class="word-analysis">Hãy bấm Micro và nói...</div>
-        <div id="status-text" class="status-text">Sẵn sàng.</div>
-    </div>
-
-    <button class="restart-btn" onclick="resetGame()">Chơi lại từ đầu</button>
 </div>
 
-<!-- Nút Micro Cố Định Ở Chính Giữa Góc Dưới -->
-<div class="floating-controls" id="mic-container">
-    <button id="start-btn" class="mic-btn">🎙️</button>
-    <div id="mic-label" class="mic-label">Chạm để nói</div>
+<!-- Micro cố định ở chính giữa góc dưới -->
+<div class="mic-container">
+    <button id="mic-btn" class="mic-btn">🎙️</button>
+    <div id="mic-hint" class="mic-hint">Bấm Mic để đọc</div>
 </div>
 
 <script>
-    // Kịch bản tối ưu dành cho học sinh Beginner (Câu ngắn 3-4 từ)
-    const scriptTree = {
-        'start': {
-            text: 'David: "Hi! The weather is so hot today. I am thirsty. Where can we buy a drink?"',
-            img: 'cong_dh.jpg',
-            keywords: {
-                'cafeteria': 'cafeteria_scene',
-                'store': 'store_scene'
-            },
-            options: [
-                "Go to cafeteria",
-                "Go to store"
-            ]
-        },
-        'cafeteria_scene': {
-            text: 'David: "Yum! Vietnamese milk coffee is great! I feel fresh now. Where next?"',
-            img: 'cang_tin.jpg',
-            keywords: {
-                'library': 'library_scene',
-                'farm': 'mushroom_scene'
-            },
-            options: [
-                "Visit the library",
-                "Visit the farm"
-            ]
-        },
-        'store_scene': {
-            text: 'David: "Cool! This store has cold water. I am ready now. Where next?"',
-            img: 'cua_hang.png',
-            keywords: {
-                'library': 'library_scene',
-                'farm': 'mushroom_scene'
-            },
-            options: [
-                "Visit the library",
-                "Visit the farm"
-            ]
-        },
-        'library_scene': {
-            text: 'David: "Wow, the library is big and quiet. Thank you for the tour!" 📚🎉',
-            img: 'thu_vien.jpg',
-            keywords: {}, 
-            options: []
-        },
-        'mushroom_scene': {
-            text: 'David: "Awesome! A mushroom farm at school! Thank you so much!" 🍄🎉',
-            img: 'khu_nam.jpg',
-            keywords: {}, 
-            options: []
-        }
-    };
+    // 5 câu tiếng Anh đơn giản cho học sinh Cấp 1
+    const sentences = [
+        "He does homework.",
+        "I study English.",
+        "Sally answers the question.",
+        "I wear my uniform.",
+        "My teacher writes on the board."
+    ];
 
-    let currentStage = 'start';
+    let currentSentenceIndex = 0;
 
-    // Khởi tạo Web Speech API (Speech Recognition & Speech Synthesis)
+    // Khởi tạo Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
 
     if (!SpeechRecognition) {
-        alert("Thiết bị này cần mở bằng Google Chrome hoặc Safari để dùng tính năng nhận diện giọng nói!");
+        alert("Trình duyệt không hỗ trợ micro.");
     } else {
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
@@ -381,42 +315,66 @@
         recognition.maxAlternatives = 1;
     }
 
-    const startBtn = document.getElementById('start-btn');
-    const micLabel = document.getElementById('mic-label');
-    const statusText = document.getElementById('status-text');
+    const sentenceList = document.getElementById('sentence-list');
     const wordAnalysis = document.getElementById('word-analysis');
-    const sceneryImg = document.getElementById('scenery-img');
-    const storyText = document.getElementById('story');
-    const optionsList = document.getElementById('options-list');
-    const interactionBox = document.getElementById('interaction-box');
-    const micContainer = document.getElementById('mic-container');
+    const statusMessage = document.getElementById('status-message');
+    const micBtn = document.getElementById('mic-btn');
+    const micHint = document.getElementById('mic-hint');
 
-    // Hàm phát âm tiếng Anh mẫu (Text-to-Speech)
+    // Render danh sách câu ra màn hình
+    function renderSentences() {
+        sentenceList.innerHTML = '';
+        sentences.forEach((text, index) => {
+            const item = document.createElement('div');
+            item.className = `sentence-item ${index === currentSentenceIndex ? 'active' : ''}`;
+            item.onclick = () => selectSentence(index);
+
+            item.innerHTML = `
+                <span class="sentence-text">${index + 1}. ${text}</span>
+                <button class="btn-listen" onclick="event.stopPropagation(); speakText('${text}')" title="Nghe đọc mẫu">
+                    🔊
+                </button>
+            `;
+            sentenceList.appendChild(item);
+        });
+    }
+
+    // Chọn câu cần luyện
+    function selectSentence(index) {
+        currentSentenceIndex = index;
+        renderSentences();
+        wordAnalysis.innerText = "👉 Hãy nhấn Micro để nói";
+        statusMessage.className = "status-message";
+        statusMessage.innerText = "Đã chọn câu " + (index + 1);
+    }
+
+    // Máy đọc phát âm mẫu (TTS)
     function speakText(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Dừng câu đang phát dở (nếu có)
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
-            utterance.rate = 0.85; // Tốc độ đọc chậm vừa phải cho beginner
+            utterance.rate = 0.8; // Đọc chậm chuẩn cho học sinh
             window.speechSynthesis.speak(utterance);
         }
     }
 
+    // Xử lý Micro thu âm
     if (recognition) {
-        startBtn.addEventListener('click', () => {
+        micBtn.addEventListener('click', () => {
             try {
                 recognition.start();
-            } catch(e) {
+            } catch (e) {
                 recognition.stop();
             }
         });
 
         recognition.onstart = () => {
-            statusText.className = "status-text status-active";
-            statusText.innerText = "Đang lắng nghe...";
-            micLabel.innerText = "Đang nghe (Chạm để dừng)";
-            startBtn.classList.add('recording');
-            startBtn.innerText = "🛑";
+            micBtn.classList.add('recording');
+            micBtn.innerText = "🛑";
+            micHint.innerText = "Panda đang nghe...";
+            statusMessage.className = "status-message status-recording";
+            statusMessage.innerText = "Hãy đọc to rõ ràng nhé!";
         };
 
         recognition.onspeechend = () => {
@@ -426,145 +384,66 @@
 
         recognition.onresult = (event) => {
             const spokenText = event.results[0][0].transcript;
-            analyzeSpeech(spokenText);
+            checkPronunciation(spokenText);
         };
 
         recognition.onerror = (event) => {
             resetMicUI();
-            statusText.className = "status-text status-error";
-            statusText.innerText = "Lỗi Micro: " + event.error;
+            statusMessage.className = "status-message status-error";
+            statusMessage.innerText = "Chưa nghe rõ,hãy bấm Mic thử lại nhé!";
         };
     }
 
     function resetMicUI() {
-        startBtn.classList.remove('recording');
-        startBtn.innerText = "🎙️";
-        micLabel.innerText = "Chạm để nói";
+        micBtn.classList.remove('recording');
+        micBtn.innerText = "🎙️";
+        micHint.innerText = "Bấm Mic để đọc";
     }
 
-    // Algorithmic Word-level Feedback (Phân tích từ đúng/sai hiển thị xanh/đỏ)
-    function analyzeSpeech(spokenText) {
-        const stage = scriptTree[currentStage];
+    // Chấm điểm từng từ: Đúng = Xanh lá, Sai = Đỏ
+    function checkPronunciation(spokenText) {
+        const targetSentence = sentences[currentSentenceIndex];
+        
+        // Làm sạch chuỗi (xóa dấu chấm câu, chuyển thành chữ thường)
+        const cleanTarget = targetSentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
         const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+
+        const targetWords = cleanTarget.split(/\s+/);
         const spokenWords = cleanSpoken.split(/\s+/);
 
-        let matchedOption = null;
-        let bestMatchScore = 0;
+        let htmlResult = "";
+        let correctCount = 0;
 
-        // So sánh chuỗi đã nói với các lựa chọn gợi ý
-        stage.options.forEach(option => {
-            const cleanOption = option.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-            const targetWords = cleanOption.split(/\s+/);
-
-            let score = 0;
-            targetWords.forEach(w => {
-                if (spokenWords.includes(w)) score++;
-            });
-
-            if (score > bestMatchScore) {
-                bestMatchScore = score;
-                matchedOption = option;
-            }
-        });
-
-        // Tạo giao diện màu sắc xanh/đỏ cho từng từ
-        if (matchedOption && bestMatchScore > 0) {
-            const cleanTarget = matchedOption.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-            const targetWords = cleanTarget.split(/\s+/);
-
-            let htmlResult = "";
-            targetWords.forEach(word => {
-                if (spokenWords.includes(word)) {
-                    htmlResult += `<span class="word-correct">${word}</span>`;
-                } else {
-                    htmlResult += `<span class="word-incorrect">${word}</span>`;
-                }
-            });
-
-            wordAnalysis.innerHTML = htmlResult;
-
-            // Kiểm tra điều kiện chuyển cảnh theo từ khóa cốt lõi
-            let isMatched = false;
-            const currentKeywords = stage.keywords;
-
-            for (let key in currentKeywords) {
-                if (cleanSpoken.includes(key)) {
-                    currentStage = currentKeywords[key];
-                    updateApplicationState();
-                    isMatched = true;
-                    break;
-                }
-            }
-
-            if (isMatched) {
-                statusText.className = "status-text status-success";
-                statusText.innerText = "✅ Phát âm tốt! Đang chuyển cảnh...";
+        targetWords.forEach(word => {
+            if (spokenWords.includes(word)) {
+                // Từ đọc ĐÚNG -> Màu xanh lá
+                htmlResult += `<span class="word-correct">${word}</span>`;
+                correctCount++;
             } else {
-                statusText.className = "status-text status-error";
-                statusText.innerText = "❌ Đọc chưa chính xác các từ màu đỏ. Bạn thử lại nhé!";
+                // Từ đọc SAI hoặc thiếu -> Màu đỏ
+                htmlResult += `<span class="word-incorrect">${word}</span>`;
             }
-
-        } else {
-            wordAnalysis.innerHTML = `<span class="word-incorrect">${spokenText}</span>`;
-            statusText.className = "status-text status-error";
-            statusText.innerText = "❌ Không nhận diện được câu gợi ý. Hãy thử lại!";
-        }
-    }
-
-    // Cập nhật trạng thái ứng dụng
-    function updateApplicationState() {
-        const stage = scriptTree[currentStage];
-        storyText.innerText = stage.text;
-        sceneryImg.src = stage.img;
-        optionsList.innerHTML = '';
-        
-        if (stage.options && stage.options.length > 0) {
-            interactionBox.style.display = 'block';
-            micContainer.style.display = 'flex';
-            
-            stage.options.forEach(option => {
-                const item = document.createElement('div');
-                item.className = 'option-item';
-                
-                item.innerHTML = `
-                    <span class="option-text">👉 ${option}</span>
-                    <button class="listen-btn" onclick="speakText('${option}')">
-                        🔊 Nghe mẫu
-                    </button>
-                `;
-                optionsList.appendChild(item);
-            });
-        } else {
-            // Màn kết thúc
-            interactionBox.innerHTML = `<p style="color: var(--success-color); text-align:center; margin-bottom:0; font-weight:bold;">🎉 Hoàn thành chuyến thăm quan campus!</p>`;
-            micContainer.style.display = 'none';
-            statusText.className = "status-text status-success";
-            statusText.innerText = "Kết thúc tour.";
-        }
-    }
-
-    function resetGame() {
-        currentStage = 'start';
-        wordAnalysis.innerText = "Hãy bấm Micro và nói...";
-        statusText.className = "status-text";
-        statusText.innerText = "Sẵn sàng.";
-        updateApplicationState();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        updateApplicationState();
-
-        // Phát âm thanh chào mừng
-        const introAudio = new Audio('david.wav');
-        introAudio.play().catch(() => {
-            const playOnInteraction = () => {
-                introAudio.play();
-                document.removeEventListener('click', playOnInteraction);
-                document.removeEventListener('touchstart', playOnInteraction);
-            };
-            document.addEventListener('click', playOnInteraction);
-            document.addEventListener('touchstart', playOnInteraction);
         });
+
+        wordAnalysis.innerHTML = htmlResult;
+
+        // Báo kết quả tổng thể
+        if (correctCount === targetWords.length) {
+            statusMessage.className = "status-message status-success";
+            statusMessage.innerText = "🎉 Tuyệt vời! Chính xác!";
+            speakText("Great job!");
+        } else if (correctCount > 0) {
+            statusMessage.className = "status-message status-recording";
+            statusMessage.innerText = "👏 Khá lắm! Hãy luyện lại các từ màu đỏ nhé!";
+        } else {
+            statusMessage.className = "status-message status-error";
+            statusMessage.innerText = "❌ Chưa đúng rồi. Bấm loa 🔊 nghe lại nhé!";
+        }
+    }
+
+    // Tải danh sách lần đầu
+    window.addEventListener('DOMContentLoaded', () => {
+        renderSentences();
     });
 </script>
 
