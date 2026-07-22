@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>English Campus Tour Guide - Webkit Speech</title>
+    <title>English Campus Tour Guide - Beginner</title>
     <style>
         :root {
             --primary-color: #2b6cb0;
@@ -14,6 +14,7 @@
             --text-muted: #718096;
             --accent-color: #dd6b20;
             --success-color: #38a169;
+            --error-color: #e53e3e;
         }
 
         * {
@@ -32,6 +33,7 @@
             align-items: flex-start;
             min-height: 100vh;
             padding: 12px;
+            padding-bottom: 110px; /* Chừa khoảng trống cho nút Mic cố định phía dưới */
         }
 
         .app-container {
@@ -47,7 +49,7 @@
         }
 
         header h1 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             color: var(--primary-color);
             margin-bottom: 2px;
         }
@@ -60,7 +62,7 @@
 
         .media-container {
             width: 100%;
-            height: 220px;
+            height: 200px;
             background-color: #edf2f7;
             border-radius: 12px;
             overflow: hidden;
@@ -91,7 +93,7 @@
         }
 
         .story-text {
-            font-size: 1rem;
+            font-size: 0.95rem;
             line-height: 1.4;
             font-style: italic;
         }
@@ -101,7 +103,7 @@
             padding: 14px;
             border-radius: 10px;
             text-align: left;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             border: 1px dashed #feebc8;
         }
 
@@ -109,100 +111,167 @@
             font-weight: 600;
             margin-bottom: 8px;
             color: #dd6b20;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        .option-line {
-            margin: 8px 0;
-            font-size: 0.95rem;
-            color: #4a5568;
-            padding-left: 15px;
-            position: relative;
-            line-height: 1.3;
-        }
-
-        .option-line::before {
-            content: "•";
-            color: var(--accent-color);
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-
-        .controls {
+        .option-item {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 10px;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
 
-        .voice-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 16px;
-            font-size: 1.05rem;
-            border-radius: 12px;
-            cursor: pointer;
+        .option-text {
+            font-size: 0.95rem;
             font-weight: bold;
-            box-shadow: 0 4px 6px rgba(43, 108, 176, 0.15);
+            color: var(--primary-color);
+        }
+
+        .listen-btn {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            color: var(--primary-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
             display: inline-flex;
-            justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
+            font-weight: 600;
         }
 
-        .voice-btn:active {
-            background-color: var(--primary-hover);
-            transform: scale(0.98);
+        .listen-btn:active {
+            background: #bbe3fe;
         }
 
-        .voice-btn:disabled {
-            background-color: #cbd5e0;
-            box-shadow: none;
+        /* Thanh phản hồi kết quả phát âm từng từ */
+        .feedback-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: left;
         }
+
+        .feedback-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .word-analysis {
+            font-size: 1.1rem;
+            font-weight: bold;
+            line-height: 1.6;
+            min-height: 30px;
+        }
+
+        .word-correct {
+            color: var(--success-color);
+            background: #f0fff4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #c6f6d5;
+            margin-right: 4px;
+            display: inline-block;
+        }
+
+        .word-incorrect {
+            color: var(--error-color);
+            background: #fff5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #fed7d7;
+            margin-right: 4px;
+            display: inline-block;
+            text-decoration: line-through;
+        }
+
+        .status-text {
+            font-size: 0.85rem;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+        .status-active { color: var(--accent-color); animation: pulse 1.5s infinite; }
+        .status-success { color: var(--success-color); }
+        .status-error { color: var(--error-color); }
 
         .restart-btn {
             background-color: transparent;
             color: var(--text-muted);
             border: 1px solid #e2e8f0;
-            padding: 8px 16px;
-            font-size: 0.85rem;
+            padding: 6px 14px;
+            font-size: 0.8rem;
             border-radius: 20px;
             cursor: pointer;
         }
 
-        .status-box {
-            margin-top: 12px;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            background: #f7fafc;
-            width: 100%;
+        /* Micro cố định ở giữa góc dưới */
+        .floating-controls {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .status-active {
-            color: var(--accent-color);
-            font-weight: 600;
-            animation: pulse 1.5s infinite;
+        .mic-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(43, 108, 176, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
         }
 
-        .status-success { color: var(--success-color); font-weight: 600; }
-        .status-error { color: #e53e3e; font-weight: 600; }
+        .mic-btn:active {
+            transform: scale(0.92);
+        }
 
-        .transcript-zone {
+        .mic-btn.recording {
+            background: var(--error-color);
+            box-shadow: 0 6px 16px rgba(229, 62, 62, 0.5);
+            animation: pulse-ring 1.2s infinite;
+        }
+
+        .mic-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
             margin-top: 6px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            white-space: nowrap;
         }
-
-        .transcript-text { font-weight: bold; color: #e53e3e; }
 
         @keyframes pulse {
             0% { opacity: 0.6; }
             50% { opacity: 1; }
             100% { opacity: 0.6; }
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(229, 62, 62, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
         }
     </style>
 </head>
@@ -211,7 +280,7 @@
 <div class="app-container">
     <header>
         <h1>🎙️ Campus Tour Guide</h1>
-        <p>Luyện nói tiếng Anh tương tác rẽ nhánh</p>
+        <p>Luyện nói tiếng Anh Beginner</p>
     </header>
     
     <div class="media-container">
@@ -224,74 +293,73 @@
     </div>
 
     <div class="interaction-panel" id="interaction-box">
-        <p>🔊 Nhấn nút dưới rồi đọc TO câu gợi ý:</p>
-        <div id="options-list">
-            </div>
+        <p>🔊 Nghe mẫu và chọn 1 câu để đọc:</p>
+        <div id="options-list"></div>
     </div>
 
-    <div class="controls">
-        <button id="start-btn" class="voice-btn">
-            <span id="btn-icon">🎙️</span> <span id="btn-text">Bắt đầu nói (Chạm để nói)</span>
-        </button>
-        <button class="restart-btn" onclick="resetGame()">Chơi lại từ đầu</button>
+    <!-- Thanh phân tích chấm điểm phát âm từng từ -->
+    <div class="feedback-box">
+        <div class="feedback-title">KẾT QUẢ PHÁT ÂM:</div>
+        <div id="word-analysis" class="word-analysis">Hãy bấm Micro và nói...</div>
+        <div id="status-text" class="status-text">Sẵn sàng.</div>
     </div>
-    
-    <div class="status-box">
-        <div id="status-text">Sẵn sàng. Hãy cấp quyền truy cập Micro khi được hỏi.</div>
-        <div class="transcript-zone">Hệ thống nghe được: <span id="transcript-text" class="transcript-text">...</span></div>
-    </div>
+
+    <button class="restart-btn" onclick="resetGame()">Chơi lại từ đầu</button>
+</div>
+
+<!-- Nút Micro Cố Định Ở Chính Giữa Góc Dưới -->
+<div class="floating-controls" id="mic-container">
+    <button id="start-btn" class="mic-btn">🎙️</button>
+    <div id="mic-label" class="mic-label">Chạm để nói</div>
 </div>
 
 <script>
-    // Cơ sở dữ liệu kịch bản và đường dẫn ảnh local trên GitHub
+    // Kịch bản tối ưu dành cho học sinh Beginner (Câu ngắn 3-4 từ)
     const scriptTree = {
         'start': {
-            text: 'David: "Hi there! Thanks for meeting me. Wow, the weather in Vietnam is so hot today, I\'m super thirsty. Can we get something to drink first?"',
+            text: 'David: "Hi! The weather is so hot today. I am thirsty. Where can we buy a drink?"',
             img: 'cong_dh.jpg',
             keywords: {
                 'cafeteria': 'cafeteria_scene',
-                'convenience': 'store_scene',
                 'store': 'store_scene'
             },
             options: [
-                "Let's go to the cafeteria",
-                "Let's go to the convenience store"
+                "Go to cafeteria",
+                "Go to store"
             ]
         },
         'cafeteria_scene': {
-            text: 'David: "Ah, the cafeteria is so lively! This traditional Vietnamese iced milk coffee (Cà phê sữa đá) looks amazing. Let me try it... Wow, it is strong and delicious! I feel refreshed now. Where should we go next?"',
+            text: 'David: "Yum! Vietnamese milk coffee is great! I feel fresh now. Where next?"',
             img: 'cang_tin.jpg',
             keywords: {
                 'library': 'library_scene',
-                'mushroom': 'mushroom_scene',
                 'farm': 'mushroom_scene'
             },
             options: [
-                "We can go to the library now",
-                "We can go to the mushroom farm"
+                "Visit the library",
+                "Visit the farm"
             ]
         },
         'store_scene': {
-            text: 'David: "Great, this convenience store has good air conditioning! I will grab a bottle of cold water. Ah, that feels much better! I\'m ready to continue the tour. What\'s next on the list?"',
+            text: 'David: "Cool! This store has cold water. I am ready now. Where next?"',
             img: 'cua_hang.png',
             keywords: {
                 'library': 'library_scene',
-                'mushroom': 'mushroom_scene',
                 'farm': 'mushroom_scene'
             },
             options: [
-                "Let's go to the library next",
-                "Let's go to the mushroom farm next"
+                "Visit the library",
+                "Visit the farm"
             ]
         },
         'library_scene': {
-            text: 'David: "Shh... we need to be quiet, right? Wow, this library is so big and modern. There are so many students studying hard here. Thank you for this wonderful campus tour!" 📚🎉',
+            text: 'David: "Wow, the library is big and quiet. Thank you for the tour!" 📚🎉',
             img: 'thu_vien.jpg',
             keywords: {}, 
             options: []
         },
         'mushroom_scene': {
-            text: 'David: "Unbelievable! A mushroom farm inside a university? Seeing how students grow these organic mushrooms is the coolest thing ever. This tour was full of surprises. Thanks a lot!" 🍄🎉',
+            text: 'David: "Awesome! A mushroom farm at school! Thank you so much!" 🍄🎉',
             img: 'khu_nam.jpg',
             keywords: {}, 
             options: []
@@ -300,67 +368,127 @@
 
     let currentStage = 'start';
 
-    // Gọi chính xác API webkitSpeechRecognition tích hợp trong nhân trình duyệt
+    // Khởi tạo Web Speech API (Speech Recognition & Speech Synthesis)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
 
     if (!SpeechRecognition) {
-        alert("Thiết bị này cần mở bằng Google Chrome (Android) hoặc Safari (iPhone) để dùng chức năng nhận diện giọng nói!");
+        alert("Thiết bị này cần mở bằng Google Chrome hoặc Safari để dùng tính năng nhận diện giọng nói!");
     } else {
         recognition = new SpeechRecognition();
-        recognition.lang = 'en-US'; // Chế độ nhận diện Tiếng Anh chuẩn
+        recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
     }
 
     const startBtn = document.getElementById('start-btn');
-    const btnText = document.getElementById('btn-text');
-    const btnIcon = document.getElementById('btn-icon');
+    const micLabel = document.getElementById('mic-label');
     const statusText = document.getElementById('status-text');
-    const transcriptText = document.getElementById('transcript-text');
+    const wordAnalysis = document.getElementById('word-analysis');
     const sceneryImg = document.getElementById('scenery-img');
     const storyText = document.getElementById('story');
     const optionsList = document.getElementById('options-list');
     const interactionBox = document.getElementById('interaction-box');
+    const micContainer = document.getElementById('mic-container');
 
-    // Cấu hình các sự kiện cho bộ nhận diện Webkit Speech
+    // Hàm phát âm tiếng Anh mẫu (Text-to-Speech)
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Dừng câu đang phát dở (nếu có)
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85; // Tốc độ đọc chậm vừa phải cho beginner
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
     if (recognition) {
         startBtn.addEventListener('click', () => {
             try {
                 recognition.start();
             } catch(e) {
-                console.log("Hệ thống nhận diện đang hoạt động.");
+                recognition.stop();
             }
         });
 
-        // Trạng thái khi mic bắt đầu thu âm
         recognition.onstart = () => {
-            statusText.className = "status-active";
-            statusText.innerText = "🎙️ Đang nghe... Hãy đọc to câu thoại gợi ý bằng tiếng Anh.";
-            btnText.innerText = "Hệ thống đang lắng nghe...";
-            btnIcon.innerText = "🛑";
-            startBtn.disabled = true;
+            statusText.className = "status-text status-active";
+            statusText.innerText = "Đang lắng nghe...";
+            micLabel.innerText = "Đang nghe (Chạm để dừng)";
+            startBtn.classList.add('recording');
+            startBtn.innerText = "🛑";
         };
 
-        // Khi người học ngừng nói
         recognition.onspeechend = () => {
             recognition.stop();
-            startBtn.disabled = false;
-            btnText.innerText = "Bắt đầu nói (Chạm để nói)";
-            btnIcon.innerText = "🎙️";
+            resetMicUI();
         };
 
-        // Xử lý chuỗi văn bản sau khi mic nhận diện thành công
         recognition.onresult = (event) => {
-            const resultText = event.results[0][0].transcript.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
-            transcriptText.innerText = `"${event.results[0][0].transcript}"`;
-            
-            let isMatched = false;
-            const currentKeywords = scriptTree[currentStage].keywords;
+            const spokenText = event.results[0][0].transcript;
+            analyzeSpeech(spokenText);
+        };
 
-            // Thuật toán quét so khớp từ khóa cốt lõi (Tăng độ chính xác trên thiết bị di động)
+        recognition.onerror = (event) => {
+            resetMicUI();
+            statusText.className = "status-text status-error";
+            statusText.innerText = "Lỗi Micro: " + event.error;
+        };
+    }
+
+    function resetMicUI() {
+        startBtn.classList.remove('recording');
+        startBtn.innerText = "🎙️";
+        micLabel.innerText = "Chạm để nói";
+    }
+
+    // Algorithmic Word-level Feedback (Phân tích từ đúng/sai hiển thị xanh/đỏ)
+    function analyzeSpeech(spokenText) {
+        const stage = scriptTree[currentStage];
+        const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+        const spokenWords = cleanSpoken.split(/\s+/);
+
+        let matchedOption = null;
+        let bestMatchScore = 0;
+
+        // So sánh chuỗi đã nói với các lựa chọn gợi ý
+        stage.options.forEach(option => {
+            const cleanOption = option.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+            const targetWords = cleanOption.split(/\s+/);
+
+            let score = 0;
+            targetWords.forEach(w => {
+                if (spokenWords.includes(w)) score++;
+            });
+
+            if (score > bestMatchScore) {
+                bestMatchScore = score;
+                matchedOption = option;
+            }
+        });
+
+        // Tạo giao diện màu sắc xanh/đỏ cho từng từ
+        if (matchedOption && bestMatchScore > 0) {
+            const cleanTarget = matchedOption.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+            const targetWords = cleanTarget.split(/\s+/);
+
+            let htmlResult = "";
+            targetWords.forEach(word => {
+                if (spokenWords.includes(word)) {
+                    htmlResult += `<span class="word-correct">${word}</span>`;
+                } else {
+                    htmlResult += `<span class="word-incorrect">${word}</span>`;
+                }
+            });
+
+            wordAnalysis.innerHTML = htmlResult;
+
+            // Kiểm tra điều kiện chuyển cảnh theo từ khóa cốt lõi
+            let isMatched = false;
+            const currentKeywords = stage.keywords;
+
             for (let key in currentKeywords) {
-                if (resultText.includes(key)) {
+                if (cleanSpoken.includes(key)) {
                     currentStage = currentKeywords[key];
                     updateApplicationState();
                     isMatched = true;
@@ -369,25 +497,21 @@
             }
 
             if (isMatched) {
-                statusText.className = "status-success";
-                statusText.innerText = "✅ Nhận diện chính xác! Đã tự động đổi cảnh ảnh.";
+                statusText.className = "status-text status-success";
+                statusText.innerText = "✅ Phát âm tốt! Đang chuyển cảnh...";
             } else {
-                statusText.className = "status-error";
-                statusText.innerText = "❌ Chưa khớp câu thoại gợi ý. Bạn hãy đọc lại rõ ràng hơn nhé!";
+                statusText.className = "status-text status-error";
+                statusText.innerText = "❌ Đọc chưa chính xác các từ màu đỏ. Bạn thử lại nhé!";
             }
-        };
 
-        // Báo lỗi thiết bị đầu vào (Micro bị chặn hoặc ngắt kết nối giữa chừng)
-        recognition.onerror = (event) => {
-            startBtn.disabled = false;
-            btnText.innerText = "Bắt đầu nói (Chạm để nói)";
-            btnIcon.innerText = "🎙️";
-            statusText.className = "status-error";
-            statusText.innerText = "Lỗi kết nối Micro: " + event.error;
-        };
+        } else {
+            wordAnalysis.innerHTML = `<span class="word-incorrect">${spokenText}</span>`;
+            statusText.className = "status-text status-error";
+            statusText.innerText = "❌ Không nhận diện được câu gợi ý. Hãy thử lại!";
+        }
     }
 
-    // Hàm cập nhật giao diện hiển thị hình ảnh và câu thoại gợi ý tương ứng từng màn
+    // Cập nhật trạng thái ứng dụng
     function updateApplicationState() {
         const stage = scriptTree[currentStage];
         storyText.innerText = stage.text;
@@ -396,47 +520,50 @@
         
         if (stage.options && stage.options.length > 0) {
             interactionBox.style.display = 'block';
-            startBtn.style.display = 'inline-flex';
+            micContainer.style.display = 'flex';
             
             stage.options.forEach(option => {
-                const div = document.createElement('div');
-                div.className = 'option-line';
-                div.innerHTML = `👉 <strong>${option}</strong>`;
-                optionsList.appendChild(div);
+                const item = document.createElement('div');
+                item.className = 'option-item';
+                
+                item.innerHTML = `
+                    <span class="option-text">👉 ${option}</span>
+                    <button class="listen-btn" onclick="speakText('${option}')">
+                        🔊 Nghe mẫu
+                    </button>
+                `;
+                optionsList.appendChild(item);
             });
         } else {
-            // Trường hợp kết thúc màn chơi (Endings)
-            interactionBox.innerHTML = `<p style="color: var(--success-color); text-align:center; margin-bottom:0; font-weight:bold;">🎉 Bạn đã kết thúc chuyến dẫn tour xuất sắc!</p>`;
-            startBtn.style.display = 'none';
-            statusText.className = "status-success";
-            statusText.innerText = "Chuyến tham quan kết thúc.";
+            // Màn kết thúc
+            interactionBox.innerHTML = `<p style="color: var(--success-color); text-align:center; margin-bottom:0; font-weight:bold;">🎉 Hoàn thành chuyến thăm quan campus!</p>`;
+            micContainer.style.display = 'none';
+            statusText.className = "status-text status-success";
+            statusText.innerText = "Kết thúc tour.";
         }
     }
 
-    // Thiết lập tính năng chơi lại từ đầu (Reset)
     function resetGame() {
         currentStage = 'start';
-        transcriptText.innerText = "...";
-        statusText.className = "";
-        statusText.innerText = "Sẵn sàng. Nhấn nút để kích hoạt microphone.";
+        wordAnalysis.innerText = "Hãy bấm Micro và nói...";
+        statusText.className = "status-text";
+        statusText.innerText = "Sẵn sàng.";
         updateApplicationState();
     }
 
-    // Đảm bảo dữ liệu hiển thị NGAY LẬP TỨC khi màn hình vừa tải xong
     window.addEventListener('DOMContentLoaded', () => {
         updateApplicationState();
 
-        // THÊM CODE PHÁT AUDIO DAVID.WAV
+        // Phát âm thanh chào mừng
         const introAudio = new Audio('david.wav');
         introAudio.play().catch(() => {
-            // Xử lý khi cơ chế bảo mật Autoplay của trình duyệt chặn âm thanh tự động phát
-            const playAudioOnInteraction = () => {
+            const playOnInteraction = () => {
                 introAudio.play();
-                document.removeEventListener('click', playAudioOnInteraction);
-                document.removeEventListener('touchstart', playAudioOnInteraction);
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('touchstart', playOnInteraction);
             };
-            document.addEventListener('click', playAudioOnInteraction);
-            document.addEventListener('touchstart', playAudioOnInteraction);
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('touchstart', playOnInteraction);
         });
     });
 </script>
