@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Panda Speaks - Luyện Phát Âm Tiếng Anh</title>
+    <title>Panda Speaks - Luyện Phát Âm Tiếng Trung HSK 1</title>
     <style>
         :root {
             --panda-green: #22c55e;
@@ -24,7 +24,7 @@
         }
 
         body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', 'Microsoft YaHei', sans-serif;
             background-color: #e2f8eb;
             background-image: radial-gradient(#a7f3d0 2px, transparent 2px);
             background-size: 24px 24px;
@@ -195,11 +195,25 @@
         }
 
         .target-sentence {
-            font-size: 1.2rem;
+            font-size: 1.6rem;
             font-weight: bold;
             color: #0f172a;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .target-pinyin {
+            font-size: 0.95rem;
+            color: #2563eb;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .target-meaning {
+            font-size: 0.85rem;
+            color: #64748b;
             margin-bottom: 10px;
-            line-height: 1.4;
+            font-style: italic;
         }
 
         .btn-listen {
@@ -273,6 +287,7 @@
             border-radius: 6px;
             border: 1px solid #86efac;
             font-weight: bold;
+            font-size: 1.2rem;
         }
 
         .word-incorrect {
@@ -282,6 +297,7 @@
             border-radius: 6px;
             border: 1px solid #fca5a5;
             font-weight: bold;
+            font-size: 1.2rem;
         }
 
         .ipa-text {
@@ -464,7 +480,7 @@
     <div class="header-avatar">🐼</div>
     <header>
         <h1>Panda Speaks</h1>
-        <p>Nghe mẫu 🔊 rồi bấm Mic đọc nhé!</p>
+        <p>Nghe mẫu 🔊 rồi bấm Mic đọc tiếng Trung nhé!</p>
     </header>
 
     <div class="card-navigation-wrapper">
@@ -473,7 +489,9 @@
         <div class="current-card">
             <div class="card-label">Câu cần luyện đọc:</div>
             <div id="target-sentence" class="target-sentence">Loading...</div>
-            <button class="btn-listen" onclick="speakText(sentences[currentIndex])">
+            <div id="target-pinyin" class="target-pinyin">Loading...</div>
+            <div id="target-meaning" class="target-meaning">Loading...</div>
+            <button class="btn-listen" onclick="speakText(sentences[currentIndex].zh)">
                 🔊 Nghe đọc mẫu
             </button>
         </div>
@@ -508,22 +526,20 @@
 </div>
 
 <script>
+    // Danh sách các câu HSK 1 cơ bản dành cho người mới bắt đầu
     const sentences = [
-        "He does homework.",
-        "I study English every single day.",
-        "Sally answers the question carefully.",
-        "I wear my uniform when I go to school.",
-        "My teacher writes on the board with green chalk."
+        { zh: "你好", pinyin: "nǐ hǎo", meaning: "Xin chào" },
+        { zh: "谢谢你", pinyin: "xiè xie nǐ", meaning: "Cảm ơn bạn" },
+        { zh: "我是学生", pinyin: "wǒ shì xué shēng", meaning: "Tôi là học sinh" },
+        { zh: "我喜欢喝水", pinyin: "wǒ xǐ huan hē shuǐ", meaning: "Tôi thích uống nước" },
+        { zh: "今天天气很好", pinyin: "jīn tiān tiān qì hěn hǎo", meaning: "Hôm nay thời tiết rất tốt" }
     ];
 
-    const dictionaryIPA = {
-        "he": "hiː", "does": "dʌz", "homework": "hoʊm.wɝːk", "i": "aɪ",
-        "study": "stʌd.i", "english": "ɪŋ.ɡlɪʃ", "every": "ev.ri", "single": "sɪŋ.ɡəl",
-        "day": "deɪ", "sally": "sæl.i", "answers": "æn.sɚz", "the": "ðə",
-        "question": "kwes.tʃən", "carefully": "ker.fəl.i", "wear": "wer", "my": "maɪ",
-        "uniform": "juː.nə.fɔːrm", "when": "wen", "go": "ɡoʊ", "to": "tuː",
-        "school": "skuːl", "teacher": "tiː.tʃɚ", "writes": "raɪts", "on": "ɑːn",
-        "board": "bɔːrd", "with": "wɪð", "green": "ɡriːn", "chalk": "tʃɑːk"
+    // Từ điển Pinyin từng chữ Hán
+    const dictionaryPinyin = {
+        "你": "nǐ", "好": "hǎo", "谢": "xiè", "是": "shì", "我": "wǒ",
+        "学": "xué", "生": "shēng", "喜": "xǐ", "欢": "huan", "喝": "hē",
+        "水": "shuǐ", "今": "jīn", "天": "tiān", "气": "qì", "很": "hǎo"
     };
 
     let currentIndex = 0;
@@ -539,13 +555,15 @@
         alert("Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome hoặc Safari.");
     } else {
         recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.interimResults = true; // Bật interim để hỗ trợ ngắt nghỉ hơi mà không mất từ
+        recognition.lang = 'zh-CN'; // Cấu hình nhận diện Tiếng Trung Phổ Thông
+        recognition.interimResults = true;
         recognition.maxAlternatives = 1;
         recognition.continuous = true;
     }
 
     const targetSentenceEl = document.getElementById('target-sentence');
+    const targetPinyinEl = document.getElementById('target-pinyin');
+    const targetMeaningEl = document.getElementById('target-meaning');
     const progressBarEl = document.getElementById('progress-bar');
     const wordAnalysisEl = document.getElementById('word-analysis');
     const scoreBadgeEl = document.getElementById('score-badge');
@@ -559,7 +577,11 @@
     let accumulatedTranscript = "";
 
     function loadSentence() {
-        targetSentenceEl.innerText = sentences[currentIndex];
+        const item = sentences[currentIndex];
+        targetSentenceEl.innerText = item.zh;
+        targetPinyinEl.innerText = item.pinyin;
+        targetMeaningEl.innerText = item.meaning;
+
         progressBarEl.innerText = `Câu ${currentIndex + 1} / ${sentences.length}`;
         wordAnalysisEl.innerHTML = "👉 Bấm Micro để bắt đầu nói";
         scoreBadgeEl.style.display = "none";
@@ -607,7 +629,7 @@
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
+            utterance.lang = 'zh-CN'; // Phát âm chuẩn tiếng Trung
             utterance.rate = 0.8;
             window.speechSynthesis.speak(utterance);
         }
@@ -674,8 +696,7 @@
             statusMessageEl.className = "status-message status-recording";
             statusMessageEl.innerText = "Panda đang nghe! Thoải mái ngắt nghỉ hơi nhé...";
 
-            // Thời gian chờ tối đa cho các câu dài hơn
-            const wordCount = sentences[currentIndex].split(' ').length;
+            const wordCount = Array.from(sentences[currentIndex].zh).length;
             const maxDuration = Math.max(10000, wordCount * 2500);
 
             if (maxRecordingTimer) clearTimeout(maxRecordingTimer);
@@ -687,11 +708,10 @@
         recognition.onresult = (event) => {
             let currentSpeech = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-                currentSpeech += event.results[i][0].transcript + " ";
+                currentSpeech += event.results[i][0].transcript;
             }
             accumulatedTranscript = currentSpeech;
 
-            // Cho phép tạm dừng ngắt hơi (3 giây im lặng mới tự ngắt)
             if (silenceTimer) clearTimeout(silenceTimer);
             silenceTimer = setTimeout(() => {
                 if (isRecording && accumulatedTranscript.trim().length > 0) {
@@ -729,7 +749,7 @@
         resetMicUI();
 
         if (accumulatedTranscript.trim().length > 0) {
-            analyzeIPASpeech(accumulatedTranscript.trim());
+            analyzeChineseSpeech(accumulatedTranscript.trim());
         }
     }
 
@@ -762,93 +782,74 @@
         return matrix[b.length][a.length];
     }
 
-    // Thuật toán chấm phát âm thông minh & nương tay câu 1
-    function analyzeIPASpeech(spokenText) {
-        const targetSentence = sentences[currentIndex];
+    // Thuật toán chấm phát âm Tiếng Trung linh hoạt & nương tay câu 1
+    function analyzeChineseSpeech(spokenText) {
+        const targetSentenceObj = sentences[currentIndex];
         
-        // Chuẩn hóa và lọc từ rác/từ nối tạm ngắt nghỉ
-        const cleanTarget = targetSentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-        const cleanSpoken = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-                                       .replace(/\b(uh|um|ah|like|er)\b/g, ""); 
+        // Loại bỏ dấu câu tiếng Trung & khoảng trắng
+        const cleanTargetStr = targetSentenceObj.zh.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？，。！]/g, "");
+        const cleanSpokenStr = spokenText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？，。！\s]/g, "");
 
-        const targetWords = cleanTarget.split(/\s+/).filter(Boolean);
-        const spokenWords = cleanSpoken.split(/\s+/).filter(Boolean);
+        // Tách từng chữ Hán
+        const targetChars = Array.from(cleanTargetStr);
+        const spokenChars = Array.from(cleanSpokenStr);
 
         let totalScore = 0;
         let htmlResult = "";
         let spokenPointer = 0;
 
-        // CẤU HÌNH ĐỘ KHÓ THEO CÂU:
-        // Câu 0 (Câu 1): Chấm nhẹ tay (ngưỡng vượt 40%, cộng điểm thưởng)
-        // Câu 1-4 (Câu 2-5): Chấm chuẩn xác hơn (ngưỡng 55%)
         const isEasySentence = (currentIndex === 0);
         const wordPassThreshold = isEasySentence ? 0.35 : 0.48;
 
-        targetWords.forEach((targetWord) => {
-            const targetIPA = dictionaryIPA[targetWord] || targetWord;
-            let bestWordScore = 0;
+        targetChars.forEach((targetChar) => {
+            const pinyinText = dictionaryPinyin[targetChar] || "";
+            let bestCharScore = 0;
             let bestMatchIndex = -1;
 
-            // Tìm kiếm trong cửa sổ trượt rộng (đến 6 từ) hỗ trợ người đọc bị ngắt nhịp
-            const searchWindow = Math.min(spokenPointer + 6, spokenWords.length);
+            const searchWindow = Math.min(spokenPointer + 4, spokenChars.length);
             for (let sIdx = spokenPointer; sIdx < searchWindow; sIdx++) {
-                const spokenWord = spokenWords[sIdx];
-                let currentWordScore = 0;
+                const spokenChar = spokenChars[sIdx];
+                let currentScore = 0;
 
-                if (targetWord === spokenWord) {
-                    currentWordScore = 1.0;
+                if (targetChar === spokenChar) {
+                    currentScore = 1.0;
                 } else {
-                    // Tương đồng ký tự
-                    const textDist = getLevenshteinDistance(targetWord, spokenWord);
-                    const maxTextLen = Math.max(targetWord.length, spokenWord.length);
-                    const textSim = (maxTextLen - textDist) / maxTextLen;
-
-                    // Tương đồng IPA phát âm
-                    const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
-                    const cleanTargetIPA = targetIPA.replace(/[/ˈˌ.ː]/g, "");
-                    const cleanSpokenIPA = spokenIPA.replace(/[/ˈˌ.ː]/g, "");
-                    
-                    const ipaDist = getLevenshteinDistance(cleanTargetIPA, cleanSpokenIPA);
-                    const maxIpaLen = Math.max(cleanTargetIPA.length, cleanSpokenIPA.length);
-                    const ipaSim = (maxIpaLen - ipaDist) / maxIpaLen;
-
-                    currentWordScore = Math.max(textSim, ipaSim);
+                    const textDist = getLevenshteinDistance(targetChar, spokenChar);
+                    currentScore = (1 - textDist);
                 }
 
-                if (currentWordScore > bestWordScore) {
-                    bestWordScore = currentWordScore;
+                if (currentScore > bestCharScore) {
+                    bestCharScore = currentScore;
                     bestMatchIndex = sIdx;
                 }
             }
 
-            if (bestMatchIndex !== -1 && bestWordScore >= wordPassThreshold) {
+            if (bestMatchIndex !== -1 && bestCharScore >= wordPassThreshold) {
                 spokenPointer = bestMatchIndex + 1;
-                // Nếu là câu 1, nương tay tăng thưởng điểm
                 const boost = isEasySentence ? 0.25 : 0.12;
-                const boostedScore = Math.min(1.0, bestWordScore + boost);
+                const boostedScore = Math.min(1.0, bestCharScore + boost);
                 totalScore += boostedScore;
                 
                 htmlResult += `
-                    <div class="word-item" onclick="speakText('${targetWord}')">
-                        <span class="word-correct">${targetWord}</span>
-                        <span class="ipa-text">/${targetIPA}/</span>
+                    <div class="word-item" onclick="speakText('${targetChar}')">
+                        <span class="word-correct">${targetChar}</span>
+                        <span class="ipa-text">${pinyinText}</span>
                     </div>`;
             } else {
                 htmlResult += `
-                    <div class="word-item" onclick="speakText('${targetWord}')">
-                        <span class="word-incorrect">${targetWord}</span>
-                        <span class="ipa-text">/${targetIPA}/</span>
+                    <div class="word-item" onclick="speakText('${targetChar}')">
+                        <span class="word-incorrect">${targetChar}</span>
+                        <span class="ipa-text">${pinyinText}</span>
                     </div>`;
             }
         });
 
-        const finalPercentage = Math.round((totalScore / targetWords.length) * 100);
+        const finalPercentage = Math.round((totalScore / targetChars.length) * 100);
 
         scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Ngưỡng đạt bài tập: Câu 1 nương tay 40%, các câu sau 55%
         const sentencePassPercentage = isEasySentence ? 40 : 55;
 
         if (finalPercentage >= sentencePassPercentage) {
