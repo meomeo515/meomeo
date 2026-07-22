@@ -413,7 +413,7 @@
 
     <!-- Khung Phân Tích & Chấm Điểm IPA -->
     <div class="result-box">
-        <div id="score-badge" class="score-badge">Độ chính xác IPA: 0%</div>
+        <div id="score-badge" class="score-badge">Độ chính xác: 0%</div>
         <div id="word-analysis" class="word-analysis">👉 Bấm Micro để bắt đầu nói</div>
         <div id="status-message" class="status-message">Sẵn sàng!</div>
     </div>
@@ -422,7 +422,7 @@
     <div class="mic-container">
         <button id="mic-btn" class="mic-btn">🎙️</button>
         <div id="mic-hint" class="mic-hint">Bấm Mic để đọc</div>
-        <div id="timer-display" class="timer-display">⏱️ Thời gian: 6s</div>
+        <div id="timer-display" class="timer-display">⏱️ Thời gian: 12s</div>
     </div>
 </div>
 
@@ -459,8 +459,8 @@
     let currentIndex = 0;
     let isCurrentPassed = false;
     let recordingTimer = null;
-    let timeLeft = 6;
-    const RECORDING_DURATION = 6; // Thời gian đọc mặc định (giây)
+    const RECORDING_DURATION = 12;
+    let timeLeft = RECORDING_DURATION;
 
     // Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -570,7 +570,6 @@
         } catch(e) {}
     }
 
-    // Xử lý Sự kiện Thu âm & Timer
     if (recognition) {
         micBtn.addEventListener('click', () => {
             if (micBtn.classList.contains('recording')) {
@@ -585,7 +584,7 @@
             micBtn.innerText = "🛑";
             micHint.innerText = "Bấm để dừng";
             statusMessageEl.className = "status-message status-recording";
-            statusMessageEl.innerText = "Panda đang nghe, hãy đọc nhé!";
+            statusMessageEl.innerText = "Panda đang nghe, bạn cứ thoải mái đọc nhé!";
         };
 
         recognition.onresult = (event) => {
@@ -635,10 +634,9 @@
         timerDisplayEl.style.display = "none";
     }
 
-    // Thuật toán Levenshtein đo độ giống nhau về ngữ âm IPA / Chuỗi
+    // Thuật toán Levenshtein đo độ tương đồng
     function getSimilarity(a, b) {
         if (!a || !b) return 0;
-        // Loại bỏ ký tự đặc biệt trong IPA để so sánh cốt lõi âm thanh
         const cleanA = a.replace(/[/ˈˌ.ː]/g, "");
         const cleanB = b.replace(/[/ˈˌ.ː]/g, "");
         
@@ -663,7 +661,7 @@
         return maxLen === 0 ? 1 : ((maxLen - matrix[cleanB.length][cleanA.length]) / maxLen);
     }
 
-    // Chấm điểm dựa trên phiên âm IPA thực tế
+    // Algorithm nhẹ nhàng & khuyến khích người học
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
@@ -675,41 +673,44 @@
 
         let totalIpaScore = 0;
         let htmlResult = "";
+        let usedSpokenIndices = new Set();
 
         targetWords.forEach((targetWord, index) => {
-            let bestMatchSpoken = "";
-            let bestWordSimilarity = 0;
+            const targetIPA = dictionaryIPA[targetWord] || targetWord;
+            
+            // Tìm từ khớp nhất trong toàn bộ câu đọc (Linh hoạt vị trí từ)
+            let bestMatchIndex = -1;
+            let maxSimilarity = 0;
 
-            // Tìm từ người dùng đọc khớp nhất
             spokenWords.forEach((spokenWord, sIdx) => {
-                const sim = getSimilarity(targetWord, spokenWord);
-                const distancePenalty = Math.abs(index - sIdx) * 0.05;
-                const adjustedSim = Math.max(0, sim - distancePenalty);
-
-                if (adjustedSim > bestWordSimilarity) {
-                    bestWordSimilarity = sim;
-                    bestMatchSpoken = spokenWord;
+                if (usedSpokenIndices.has(sIdx)) return;
+                const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
+                
+                // Trực tiếp bằng nhau hoặc tính độ tương đồng IPA
+                let sim = (targetWord === spokenWord) ? 1 : getSimilarity(targetIPA, spokenIPA);
+                
+                if (sim > maxSimilarity) {
+                    maxSimilarity = sim;
+                    bestMatchIndex = sIdx;
                 }
             });
 
-            // Lấy IPA mẫu và IPA ước tính người dùng phát âm
-            const targetIPA = dictionaryIPA[targetWord] || targetWord;
-            const spokenIPA = dictionaryIPA[bestMatchSpoken] || bestMatchSpoken;
-
-            // Tính điểm tương đồng dựa trên chuỗi IPA
-            const ipaSimilarity = getSimilarity(targetIPA, spokenIPA);
-            totalIpaScore += ipaSimilarity;
-
-            if (ipaSimilarity >= 0.75) {
-                // Đọc đúng ngữ âm IPA
+            // Nếu tìm thấy từ tương đối giống
+            if (bestMatchIndex !== -1 && maxSimilarity >= 0.55) {
+                usedSpokenIndices.add(bestMatchIndex);
+                totalIpaScore += maxSimilarity;
+                
                 htmlResult += `
                     <div class="word-item">
                         <span class="word-correct">${targetWord}</span>
                         <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             } else {
-                // Đọc sai ngữ âm
-                const errorHint = spokenIPA ? `Nghe như: /${spokenIPA}/` : "Thiếu từ";
+                // Thử gán theo vị trí mặc định để hiện thông báo gợi ý nếu có
+                const directSpoken = spokenWords[index] || "";
+                const directIPA = dictionaryIPA[directSpoken] || directSpoken;
+                const errorHint = directIPA ? `Nghe giống: /${directIPA}/` : "Thiếu từ";
+
                 htmlResult += `
                     <div class="word-item">
                         <span class="word-incorrect">${targetWord}</span>
@@ -719,29 +720,36 @@
             }
         });
 
-        // % Chính xác tổng thể dựa trên IPA
-        const finalPercentage = Math.round((totalIpaScore / targetWords.length) * 100);
+        // Điểm cơ sở tính theo tỷ lệ các từ đạt
+        let rawPercentage = (totalIpaScore / targetWords.length) * 100;
+        
+        // Thưởng điểm nhẹ nhàng tạo động lực (+15% thưởng nếu đọc đủ ý)
+        if (usedSpokenIndices.size >= Math.ceil(targetWords.length * 0.5)) {
+            rawPercentage += 15;
+        }
 
-        scoreBadgeEl.innerText = `Độ chính xác IPA: ${finalPercentage}%`;
+        const finalPercentage = Math.min(100, Math.round(rawPercentage));
+
+        scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Xử lý hoàn thành
-        if (finalPercentage >= 60) {
+        // Chỉ cần từ 50% trở lên là ĐẠT (không quá khắt khe)
+        if (finalPercentage >= 50) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
             
             if (currentIndex < sentences.length - 1) {
-                statusMessageEl.innerText = "🎉 Phát âm chuẩn! Bấm '❯' để sang câu tiếp theo.";
+                statusMessageEl.innerText = "🎉 Giỏi quá! Bấm '❯' để sang câu tiếp theo.";
             } else {
-                statusMessageEl.innerText = "🏆 Hoàn thành xuất sắc toàn bộ bài học!";
+                statusMessageEl.innerText = "🏆 Hoàn thành xuất sắc bài luyện nói!";
             }
         } else {
             playSound('error');
             isCurrentPassed = false;
             statusMessageEl.className = "status-message status-error";
-            statusMessageEl.innerText = "👏 Cần đạt trên 60% IPA để qua bài. Luyện nghe rồi thử lại nhé!";
+            statusMessageEl.innerText = "👏 Bạn đọc gần đúng rồi, nghe mẫu rồi thử lại nhé!";
         }
 
         updateNavButtons();
