@@ -38,7 +38,7 @@
             overflow-x: hidden;
         }
 
-        /* --- Trang trí Background: Đám Mây & Lá Trúc Trôi --- */
+        /* --- Trang trí Background: Đám Mây --- */
         .cloud {
             position: fixed;
             background: rgba(255, 255, 255, 0.85);
@@ -55,7 +55,6 @@
             border-radius: 50%;
         }
 
-        /* Thêm nhiều đám mây khác nhau */
         .cloud-1 { width: 120px; height: 40px; top: 6%; left: -140px; animation-duration: 22s; }
         .cloud-1::before { width: 50px; height: 50px; top: -20px; left: 20px; }
         .cloud-1::after { width: 40px; height: 40px; top: -15px; right: 20px; }
@@ -75,26 +74,6 @@
         @keyframes floatCloud {
             0% { transform: translateX(-150px); }
             100% { transform: translateX(calc(100vw + 250px)); }
-        }
-
-        /* Hiệu ứng lá trúc nhỏ rơi & trôi nhẹ */
-        .leaf {
-            position: fixed;
-            font-size: 1.4rem;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.7;
-            animation: floatLeaf linear infinite;
-        }
-        .leaf-1 { top: -30px; left: 15%; animation-duration: 12s; animation-delay: 0s; }
-        .leaf-2 { top: -30px; left: 45%; animation-duration: 16s; animation-delay: 3s; }
-        .leaf-3 { top: -30px; left: 75%; animation-duration: 14s; animation-delay: 6s; }
-
-        @keyframes floatLeaf {
-            0% { transform: translateY(-30px) rotate(0deg) translateX(0); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { transform: translateY(105vh) rotate(360deg) translateX(50px); opacity: 0; }
         }
 
         /* --- Container Chính --- */
@@ -328,11 +307,12 @@
         .status-success { color: var(--success-color); }
         .status-error { color: var(--error-color); }
 
-        /* Nút Micro Thu Âm */
+        /* Nút Micro Thu Âm & Timer */
         .mic-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
 
         .mic-btn {
@@ -371,6 +351,17 @@
             margin-top: 8px;
         }
 
+        .timer-display {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-top: 6px;
+            display: none;
+        }
+
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
@@ -391,16 +382,11 @@
 </head>
 <body>
 
-<!-- Trang trí Đám Mây Mới -->
+<!-- Trang trí Đám Mây -->
 <div class="cloud cloud-1"></div>
 <div class="cloud cloud-2"></div>
 <div class="cloud cloud-3"></div>
 <div class="cloud cloud-4"></div>
-
-<!-- Trang trí Lá Trúc Nhỏ Rơi -->
-<div class="leaf leaf-1">🍃</div>
-<div class="leaf leaf-2">🍃</div>
-<div class="leaf leaf-3">🍃</div>
 
 <div class="app-container">
     <div id="progress-bar" class="progress-bar">Câu 1 / 5</div>
@@ -425,22 +411,23 @@
         <button id="next-btn" class="nav-btn" onclick="nextSentence()" title="Câu tiếp theo" disabled>❯</button>
     </div>
 
-    <!-- Khung Phân Tích & Chấm Điểm -->
+    <!-- Khung Phân Tích & Chấm Điểm IPA -->
     <div class="result-box">
-        <div id="score-badge" class="score-badge">Độ chính xác: 0%</div>
+        <div id="score-badge" class="score-badge">Độ chính xác IPA: 0%</div>
         <div id="word-analysis" class="word-analysis">👉 Bấm Micro để bắt đầu nói</div>
         <div id="status-message" class="status-message">Sẵn sàng!</div>
     </div>
 
-    <!-- Nút Micro Thu Âm -->
+    <!-- Nút Micro Thu Âm & Bộ Đếm Thời Gian -->
     <div class="mic-container">
         <button id="mic-btn" class="mic-btn">🎙️</button>
         <div id="mic-hint" class="mic-hint">Bấm Mic để đọc</div>
+        <div id="timer-display" class="timer-display">⏱️ Thời gian: 6s</div>
     </div>
 </div>
 
 <script>
-    // Danh sách câu và từ điển phiên âm IPA cơ bản
+    // Danh sách câu và Từ điển IPA chuẩn
     const sentences = [
         "He does homework.",
         "I study English.",
@@ -450,27 +437,30 @@
     ];
 
     const dictionaryIPA = {
-        "he": "/hiː/",
-        "does": "/dʌz/",
-        "homework": "/ˈhoʊm.wɝːk/",
-        "i": "/aɪ/",
-        "study": "/ˈstʌd.i/",
-        "english": "/ˈɪŋ.ɡlɪʃ/",
-        "sally": "/ˈsæl.i/",
-        "answers": "/ˈæn.sɚz/",
-        "the": "/ðə/",
-        "question": "/ˈkwes.tʃən/",
-        "wear": "/wer/",
-        "my": "/maɪ/",
-        "uniform": "/ˈjuː.nə.fɔːrm/",
-        "teacher": "/ˈtiː.tʃɚ/",
-        "writes": "/raɪts/",
-        "on": "/ɑːn/",
-        "board": "/bɔːrd/"
+        "he": "hiː",
+        "does": "dʌz",
+        "homework": "hoʊm.wɝːk",
+        "i": "aɪ",
+        "study": "stʌd.i",
+        "english": "ɪŋ.ɡlɪʃ",
+        "sally": "sæl.i",
+        "answers": "æn.sɚz",
+        "the": "ðə",
+        "question": "kwes.tʃən",
+        "wear": "wer",
+        "my": "maɪ",
+        "uniform": "juː.nə.fɔːrm",
+        "teacher": "tiː.tʃɚ",
+        "writes": "raɪts",
+        "on": "ɑːn",
+        "board": "bɔːrd"
     };
 
     let currentIndex = 0;
     let isCurrentPassed = false;
+    let recordingTimer = null;
+    let timeLeft = 6;
+    const RECORDING_DURATION = 6; // Thời gian đọc mặc định (giây)
 
     // Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -492,10 +482,10 @@
     const statusMessageEl = document.getElementById('status-message');
     const micBtn = document.getElementById('mic-btn');
     const micHint = document.getElementById('mic-hint');
+    const timerDisplayEl = document.getElementById('timer-display');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
 
-    // Hiển thị câu hiện tại
     function loadSentence() {
         targetSentenceEl.innerText = sentences[currentIndex];
         progressBarEl.innerText = `Câu ${currentIndex + 1} / ${sentences.length}`;
@@ -503,16 +493,15 @@
         scoreBadgeEl.style.display = "none";
         statusMessageEl.className = "status-message";
         statusMessageEl.innerText = "Sẵn sàng!";
+        timerDisplayEl.style.display = "none";
         
         isCurrentPassed = false;
         updateNavButtons();
     }
 
-    // Cập nhật trạng thái nút Prev / Next
     function updateNavButtons() {
         prevBtn.disabled = (currentIndex === 0);
         
-        // Điều kiện để có nút Next: Đã đọc đạt >= 60% HOẶC là câu cuối cùng
         if (isCurrentPassed) {
             nextBtn.disabled = (currentIndex === sentences.length - 1);
             if (currentIndex < sentences.length - 1) {
@@ -528,6 +517,7 @@
 
     function prevSentence() {
         if (currentIndex > 0) {
+            stopRecordingProcess();
             currentIndex--;
             loadSentence();
         }
@@ -535,12 +525,12 @@
 
     function nextSentence() {
         if (currentIndex < sentences.length - 1 && isCurrentPassed) {
+            stopRecordingProcess();
             currentIndex++;
             loadSentence();
         }
     }
 
-    // Đọc mẫu (TTS)
     function speakText(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -551,7 +541,6 @@
         }
     }
 
-    // Tiếng hiệu ứng (Web Audio API)
     function playSound(type) {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -581,57 +570,85 @@
         } catch(e) {}
     }
 
-    // Xử lý Sự kiện Micro
+    // Xử lý Sự kiện Thu âm & Timer
     if (recognition) {
         micBtn.addEventListener('click', () => {
-            try {
-                recognition.start();
-            } catch (e) {
-                recognition.stop();
+            if (micBtn.classList.contains('recording')) {
+                stopRecordingProcess();
+            } else {
+                startRecordingProcess();
             }
         });
 
         recognition.onstart = () => {
             micBtn.classList.add('recording');
             micBtn.innerText = "🛑";
-            micHint.innerText = "Panda đang nghe...";
+            micHint.innerText = "Bấm để dừng";
             statusMessageEl.className = "status-message status-recording";
-            statusMessageEl.innerText = "Hãy đọc to rõ ràng nhé!";
-        };
-
-        recognition.onspeechend = () => {
-            recognition.stop();
-            resetMicUI();
+            statusMessageEl.innerText = "Panda đang nghe, hãy đọc nhé!";
         };
 
         recognition.onresult = (event) => {
             const spokenText = event.results[0][0].transcript;
-            analyzeSpeechHighAccuracy(spokenText);
+            stopRecordingProcess();
+            analyzeIPASpeech(spokenText);
         };
 
         recognition.onerror = () => {
-            resetMicUI();
+            stopRecordingProcess();
             statusMessageEl.className = "status-message status-error";
             statusMessageEl.innerText = "Chưa nghe rõ, bấm Mic thử lại nhé!";
         };
+    }
+
+    function startRecordingProcess() {
+        try {
+            recognition.start();
+            timeLeft = RECORDING_DURATION;
+            timerDisplayEl.innerText = `⏱️ Còn lại: ${timeLeft}s`;
+            timerDisplayEl.style.display = "inline-block";
+
+            clearInterval(recordingTimer);
+            recordingTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    timerDisplayEl.innerText = `⏱️ Còn lại: ${timeLeft}s`;
+                } else {
+                    stopRecordingProcess();
+                }
+            }, 1000);
+        } catch (e) {
+            stopRecordingProcess();
+        }
+    }
+
+    function stopRecordingProcess() {
+        clearInterval(recordingTimer);
+        try { recognition.stop(); } catch(e){}
+        resetMicUI();
     }
 
     function resetMicUI() {
         micBtn.classList.remove('recording');
         micBtn.innerText = "🎙️";
         micHint.innerText = "Bấm Mic để đọc";
+        timerDisplayEl.style.display = "none";
     }
 
-    // Thuật toán Levenshtein Distance đo độ tương đồng chuỗi
+    // Thuật toán Levenshtein đo độ giống nhau về ngữ âm IPA / Chuỗi
     function getSimilarity(a, b) {
         if (!a || !b) return 0;
+        // Loại bỏ ký tự đặc biệt trong IPA để so sánh cốt lõi âm thanh
+        const cleanA = a.replace(/[/ˈˌ.ː]/g, "");
+        const cleanB = b.replace(/[/ˈˌ.ː]/g, "");
+        
         const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 0; i <= cleanB.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= cleanA.length; j++) matrix[0][j] = j;
 
-        for (let i = 1; i <= b.length; i++) {
-            for (let j = 1; j <= a.length; j++) {
-                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        for (let i = 1; i <= cleanB.length; i++) {
+            for (let j = 1; j <= cleanA.length; j++) {
+                if (cleanB.charAt(i - 1) === cleanA.charAt(j - 1)) {
                     matrix[i][j] = matrix[i - 1][j - 1];
                 } else {
                     matrix[i][j] = Math.min(
@@ -642,26 +659,12 @@
                 }
             }
         }
-        const maxLen = Math.max(a.length, b.length);
-        return ((maxLen - matrix[b.length][a.length]) / maxLen);
+        const maxLen = Math.max(cleanA.length, cleanB.length);
+        return maxLen === 0 ? 1 : ((maxLen - matrix[cleanB.length][cleanA.length]) / maxLen);
     }
 
-    // Phân tích chi tiết vị trí lỗi phát âm
-    function diagnosePhoneticError(targetWord, spokenWord) {
-        if (!spokenWord) return "Thiếu từ";
-        
-        // Kiểm tra lỗi âm đầu / âm cuối / âm giữa
-        if (targetWord[0] !== spokenWord[0]) {
-            return `Sai âm đầu (${spokenWord[0]}→${targetWord[0]})`;
-        }
-        if (targetWord[targetWord.length - 1] !== spokenWord[spokenWord.length - 1]) {
-            return `Sai âm cuối (-${targetWord[targetWord.length - 1]})`;
-        }
-        return `Nghe thành "${spokenWord}"`;
-    }
-
-    // Chấm điểm & Phân tích lỗi chính xác hơn
-    function analyzeSpeechHighAccuracy(spokenText) {
+    // Chấm điểm dựa trên phiên âm IPA thực tế
+    function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
         const cleanTarget = targetSentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
@@ -670,62 +673,67 @@
         const targetWords = cleanTarget.split(/\s+/);
         const spokenWords = cleanSpoken.split(/\s+/);
 
-        let totalSimilarity = 0;
+        let totalIpaScore = 0;
         let htmlResult = "";
 
         targetWords.forEach((targetWord, index) => {
-            let bestMatchWord = "";
-            let bestSimilarity = 0;
+            let bestMatchSpoken = "";
+            let bestWordSimilarity = 0;
 
-            // Ưu tiên so sánh các từ ở gần vị trí chỉ số tương ứng
+            // Tìm từ người dùng đọc khớp nhất
             spokenWords.forEach((spokenWord, sIdx) => {
                 const sim = getSimilarity(targetWord, spokenWord);
-                const distancePenalty = Math.abs(index - sIdx) * 0.05; // Phạt nếu vị trí từ lệch quá xa
+                const distancePenalty = Math.abs(index - sIdx) * 0.05;
                 const adjustedSim = Math.max(0, sim - distancePenalty);
 
-                if (adjustedSim > bestSimilarity) {
-                    bestSimilarity = sim;
-                    bestMatchWord = spokenWord;
+                if (adjustedSim > bestWordSimilarity) {
+                    bestWordSimilarity = sim;
+                    bestMatchSpoken = spokenWord;
                 }
             });
 
-            totalSimilarity += bestSimilarity;
-            const ipa = dictionaryIPA[targetWord] || "";
+            // Lấy IPA mẫu và IPA ước tính người dùng phát âm
+            const targetIPA = dictionaryIPA[targetWord] || targetWord;
+            const spokenIPA = dictionaryIPA[bestMatchSpoken] || bestMatchSpoken;
 
-            if (bestSimilarity >= 0.80) {
-                // Đọc đúng
+            // Tính điểm tương đồng dựa trên chuỗi IPA
+            const ipaSimilarity = getSimilarity(targetIPA, spokenIPA);
+            totalIpaScore += ipaSimilarity;
+
+            if (ipaSimilarity >= 0.75) {
+                // Đọc đúng ngữ âm IPA
                 htmlResult += `
                     <div class="word-item">
                         <span class="word-correct">${targetWord}</span>
-                        <span class="ipa-text">${ipa}</span>
+                        <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             } else {
-                // Đọc sai - Hiển thị phân tích vị trí lỗi
-                const errorMsg = diagnosePhoneticError(targetWord, bestMatchWord);
+                // Đọc sai ngữ âm
+                const errorHint = spokenIPA ? `Nghe như: /${spokenIPA}/` : "Thiếu từ";
                 htmlResult += `
                     <div class="word-item">
                         <span class="word-incorrect">${targetWord}</span>
-                        <span class="ipa-text">${ipa}</span>
-                        <span class="error-detail">${errorMsg}</span>
+                        <span class="ipa-text">/${targetIPA}/</span>
+                        <span class="error-detail">${errorHint}</span>
                     </div>`;
             }
         });
 
-        // Tính % chính xác tổng thể
-        const finalPercentage = Math.round((totalSimilarity / targetWords.length) * 100);
+        // % Chính xác tổng thể dựa trên IPA
+        const finalPercentage = Math.round((totalIpaScore / targetWords.length) * 100);
 
-        scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
+        scoreBadgeEl.innerText = `Độ chính xác IPA: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Xử lý mở khóa Nút Next nếu đạt >= 60%
+        // Xử lý hoàn thành
         if (finalPercentage >= 60) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
             
             if (currentIndex < sentences.length - 1) {
-                statusMessageEl.innerText = "🎉 Tuyệt vời! Hãy bấm nút '❯' để sang câu tiếp theo.";
+                statusMessageEl.innerText = "🎉 Phát âm chuẩn! Bấm '❯' để sang câu tiếp theo.";
             } else {
                 statusMessageEl.innerText = "🏆 Hoàn thành xuất sắc toàn bộ bài học!";
             }
@@ -733,7 +741,7 @@
             playSound('error');
             isCurrentPassed = false;
             statusMessageEl.className = "status-message status-error";
-            statusMessageEl.innerText = "👏 Cần đạt trên 60% để sang câu tiếp. Hãy nghe lại rồi đọc nhé!";
+            statusMessageEl.innerText = "👏 Cần đạt trên 60% IPA để qua bài. Luyện nghe rồi thử lại nhé!";
         }
 
         updateNavButtons();
