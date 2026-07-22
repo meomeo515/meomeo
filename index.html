@@ -38,7 +38,7 @@
             overflow-x: hidden;
         }
 
-        /* --- Trang trí Background: Đám Mây --- */
+        /* --- Background Decoration --- */
         .cloud {
             position: fixed;
             background: rgba(255, 255, 255, 0.85);
@@ -76,7 +76,7 @@
             100% { transform: translateX(calc(100vw + 250px)); }
         }
 
-        /* --- Container Chính --- */
+        /* --- Main Container --- */
         .app-container {
             background: var(--card-bg);
             padding: 24px 20px;
@@ -121,7 +121,6 @@
             margin-bottom: 20px;
         }
 
-        /* Khu vực Điều hướng + Khung câu hỏi */
         .card-navigation-wrapper {
             display: flex;
             align-items: center;
@@ -225,7 +224,6 @@
             background: #bbf7d0;
         }
 
-        /* Khung kết quả & Phân tích lỗi */
         .result-box {
             background: #ffffff;
             border: 2px solid #e2e8f0;
@@ -299,7 +297,6 @@
         .status-success { color: var(--success-color); }
         .status-error { color: var(--error-color); }
 
-        /* Nút Micro Thu Âm */
         .mic-container {
             display: flex;
             flex-direction: column;
@@ -363,7 +360,6 @@
 </head>
 <body>
 
-<!-- Trang trí Đám Mây -->
 <div class="cloud cloud-1"></div>
 <div class="cloud cloud-2"></div>
 <div class="cloud cloud-3"></div>
@@ -377,7 +373,6 @@
         <p>Nghe mẫu 🔊 rồi bấm Mic đọc nhé!</p>
     </header>
 
-    <!-- Khung hiển thị câu + Nút Back & Next -->
     <div class="card-navigation-wrapper">
         <button id="prev-btn" class="nav-btn" onclick="prevSentence()" title="Câu trước">❮</button>
         
@@ -392,14 +387,12 @@
         <button id="next-btn" class="nav-btn" onclick="nextSentence()" title="Câu tiếp theo" disabled>❯</button>
     </div>
 
-    <!-- Khung Phân Tích & Chấm Điểm IPA -->
     <div class="result-box">
         <div id="score-badge" class="score-badge">Độ chính xác: 0%</div>
         <div id="word-analysis" class="word-analysis">👉 Bấm Micro để bắt đầu nói</div>
         <div id="status-message" class="status-message">Sẵn sàng!</div>
     </div>
 
-    <!-- Nút Micro Thu Âm -->
     <div class="mic-container">
         <button id="mic-btn" class="mic-btn">🎙️</button>
         <div id="mic-hint" class="mic-hint">Bấm Mic để đọc</div>
@@ -407,7 +400,6 @@
 </div>
 
 <script>
-    // Danh sách câu và Từ điển IPA chuẩn xác
     const sentences = [
         "He does homework.",
         "I study English.",
@@ -416,6 +408,7 @@
         "My teacher writes on the board."
     ];
 
+    // Từ điển IPA đã cập nhật đầy đủ các từ trong bài
     const dictionaryIPA = {
         "he": "hiː",
         "does": "dʌz",
@@ -440,7 +433,6 @@
     let isCurrentPassed = false;
     let isRecording = false;
 
-    // Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
 
@@ -602,19 +594,16 @@
         micHint.innerText = "Bấm Mic để đọc";
     }
 
-    // Thuật toán Levenshtein đo độ tương đồng ký tự IPA
-    function getSimilarity(a, b) {
-        if (!a || !b) return 0;
-        const cleanA = a.replace(/[/ˈˌ.ː]/g, "");
-        const cleanB = b.replace(/[/ˈˌ.ː]/g, "");
-        
+    // Levenshtein đếm khoảng cách giữa 2 chuỗi
+    function getLevenshteinDistance(a, b) {
+        if (!a || !b) return Math.max(a ? a.length : 0, b ? b.length : 0);
         const matrix = [];
-        for (let i = 0; i <= cleanB.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= cleanA.length; j++) matrix[0][j] = j;
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
 
-        for (let i = 1; i <= cleanB.length; i++) {
-            for (let j = 1; j <= cleanA.length; j++) {
-                if (cleanB.charAt(i - 1) === cleanA.charAt(j - 1)) {
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
                     matrix[i][j] = matrix[i - 1][j - 1];
                 } else {
                     matrix[i][j] = Math.min(
@@ -625,11 +614,10 @@
                 }
             }
         }
-        const maxLen = Math.max(cleanA.length, cleanB.length);
-        return maxLen === 0 ? 1 : ((maxLen - matrix[cleanB.length][cleanA.length]) / maxLen);
+        return matrix[b.length][a.length];
     }
 
-    // Thuật toán chấm phát âm
+    // Thuật toán chấm phát âm linh hoạt dành cho Beginner
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
@@ -639,34 +627,54 @@
         const targetWords = cleanTarget.split(/\s+/).filter(Boolean);
         const spokenWords = cleanSpoken.split(/\s+/).filter(Boolean);
 
-        let totalIpaScore = 0;
+        let totalScore = 0;
         let htmlResult = "";
         let spokenPointer = 0;
 
-        // Câu 3, 4, 5 (chỉ số 2, 3, 4) sẽ giảm tiêu chuẩn độ tương đồng xuống 0.50 (thay vì 0.65)
-        const matchThreshold = (currentIndex >= 2) ? 0.50 : 0.65;
-
         targetWords.forEach((targetWord) => {
             const targetIPA = dictionaryIPA[targetWord] || targetWord;
-            
+            let bestWordScore = 0;
             let bestMatchIndex = -1;
-            let maxSimilarity = 0;
 
+            // Tìm từ khớp nhất trong khoảng 3 từ xung quanh vị trí đọc
             for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 3, spokenWords.length); sIdx++) {
                 const spokenWord = spokenWords[sIdx];
-                const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
-                
-                let sim = (targetWord === spokenWord) ? 1 : getSimilarity(targetIPA, spokenIPA);
-                
-                if (sim > maxSimilarity) {
-                    maxSimilarity = sim;
+                let currentWordScore = 0;
+
+                // 1. Trường hợp khớp từ chuẩn
+                if (targetWord === spokenWord) {
+                    currentWordScore = 1.0;
+                } else {
+                    // 2. Tính độ tương đồng theo chữ cái (chống mất s/es hoặc đọc lệch nhẹ)
+                    const textDist = getLevenshteinDistance(targetWord, spokenWord);
+                    const maxTextLen = Math.max(targetWord.length, spokenWord.length);
+                    const textSim = (maxTextLen - textDist) / maxTextLen;
+
+                    // 3. Tính độ tương đồng theo IPA
+                    const spokenIPA = dictionaryIPA[spokenWord] || spokenWord;
+                    const cleanTargetIPA = targetIPA.replace(/[/ˈˌ.ː]/g, "");
+                    const cleanSpokenIPA = spokenIPA.replace(/[/ˈˌ.ː]/g, "");
+                    
+                    const ipaDist = getLevenshteinDistance(cleanTargetIPA, cleanSpokenIPA);
+                    const maxIpaLen = Math.max(cleanTargetIPA.length, cleanSpokenIPA.length);
+                    const ipaSim = (maxIpaLen - ipaDist) / maxIpaLen;
+
+                    // Lấy điểm số cao nhất giữa Text và IPA
+                    currentWordScore = Math.max(textSim, ipaSim);
+                }
+
+                if (currentWordScore > bestWordScore) {
+                    bestWordScore = currentWordScore;
                     bestMatchIndex = sIdx;
                 }
             }
 
-            if (bestMatchIndex !== -1 && maxSimilarity >= matchThreshold) {
+            // Ngưỡng vượt qua từ mềm dẻo cho Beginner: >= 50% độ chính xác từ
+            if (bestMatchIndex !== -1 && bestWordScore >= 0.50) {
                 spokenPointer = bestMatchIndex + 1;
-                totalIpaScore += maxSimilarity;
+                // Thưởng điểm nhẹ để giúp beginner dễ vượt qua hơn
+                const boostedScore = Math.min(1.0, bestWordScore + 0.15);
+                totalScore += boostedScore;
                 
                 htmlResult += `
                     <div class="word-item">
@@ -674,7 +682,6 @@
                         <span class="ipa-text">/${targetIPA}/</span>
                     </div>`;
             } else {
-                // Đọc sai: Hiển thị màu đỏ và IPA chuẩn, KHÔNG hiện phiên âm sai
                 htmlResult += `
                     <div class="word-item">
                         <span class="word-incorrect">${targetWord}</span>
@@ -683,14 +690,15 @@
             }
         });
 
-        const finalPercentage = Math.round((totalIpaScore / targetWords.length) * 100);
+        // Điểm trung bình phần trăm của cả câu
+        const finalPercentage = Math.round((totalScore / targetWords.length) * 100);
 
         scoreBadgeEl.innerText = `Độ chính xác: ${finalPercentage}%`;
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Đạt từ 55% trở lên
-        if (finalPercentage >= 55) {
+        // Đạt từ 50% trở lên là PASS
+        if (finalPercentage >= 50) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
@@ -710,7 +718,6 @@
         updateNavButtons();
     }
 
-    // Khởi chạy ứng dụng
     window.addEventListener('DOMContentLoaded', () => {
         loadSentence();
     });
