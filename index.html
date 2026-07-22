@@ -558,7 +558,7 @@
         recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        recognition.continuous = true; // Bật continuous để hỗ trợ đọc các câu dài
+        recognition.continuous = true;
     }
 
     const targetSentenceEl = document.getElementById('target-sentence');
@@ -644,7 +644,6 @@
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.5);
             } else if (type === 'fanfare') {
-                // Nhạc chúc mừng hoàn thành bài học
                 const notes = [523.25, 659.25, 783.99, 1046.50];
                 notes.forEach((freq, idx) => {
                     const noteOsc = ctx.createOscillator();
@@ -687,9 +686,8 @@
             statusMessageEl.className = "status-message status-recording";
             statusMessageEl.innerText = "Panda đang lắng nghe, bạn cứ thoải mái đọc nhé!";
 
-            // Tự động điều chỉnh thời gian thu âm theo số từ trong câu (tối thiểu 6 giây, tối đa 15 giây)
             const wordCount = sentences[currentIndex].split(' ').length;
-            const dynamicTimeout = Math.max(6000, wordCount * 1200);
+            const dynamicTimeout = Math.max(8000, wordCount * 1500); // Tăng thời gian chờ đọc cho câu dài
 
             if (recordingTimeout) clearTimeout(recordingTimeout);
             recordingTimeout = setTimeout(() => {
@@ -742,7 +740,6 @@
         micHint.innerText = "Bấm Mic để đọc";
     }
 
-    // Levenshtein đếm khoảng cách giữa 2 chuỗi
     function getLevenshteinDistance(a, b) {
         if (!a || !b) return Math.max(a ? a.length : 0, b ? b.length : 0);
         const matrix = [];
@@ -765,7 +762,7 @@
         return matrix[b.length][a.length];
     }
 
-    // Algorithmic Pronunciation Matcher (Text + IPA)
+    // Algorithmic Pronunciation Matcher (Đã tối ưu chấm dễ hơn cho câu dài)
     function analyzeIPASpeech(spokenText) {
         const targetSentence = sentences[currentIndex];
         
@@ -779,13 +776,17 @@
         let htmlResult = "";
         let spokenPointer = 0;
 
+        // Cấu hình linh hoạt theo độ dài câu
+        const isLongSentence = targetWords.length >= 4;
+        const wordMatchThreshold = isLongSentence ? 0.35 : 0.45; // Ngưỡng nhận diện từng từ cực dễ
+        const searchWindow = isLongSentence ? 6 : 4; // Cửa sổ quét rộng hơn cho câu dài
+
         targetWords.forEach((targetWord) => {
             const targetIPA = dictionaryIPA[targetWord] || targetWord;
             let bestWordScore = 0;
             let bestMatchIndex = -1;
 
-            // Tìm kiếm trong phạm vi cửa sổ 4 từ để hỗ trợ câu dài
-            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + 4, spokenWords.length); sIdx++) {
+            for (let sIdx = spokenPointer; sIdx < Math.min(spokenPointer + searchWindow, spokenWords.length); sIdx++) {
                 const spokenWord = spokenWords[sIdx];
                 let currentWordScore = 0;
 
@@ -813,10 +814,10 @@
                 }
             }
 
-            // Ngưỡng đạt 50% độ chính xác từ
-            if (bestMatchIndex !== -1 && bestWordScore >= 0.50) {
+            // Đánh giá từ theo ngưỡng mới
+            if (bestMatchIndex !== -1 && bestWordScore >= wordMatchThreshold) {
                 spokenPointer = bestMatchIndex + 1;
-                const boostedScore = Math.min(1.0, bestWordScore + 0.15);
+                const boostedScore = Math.min(1.0, bestWordScore + 0.25); // Thưởng thêm nhiều điểm hơn
                 totalScore += boostedScore;
                 
                 htmlResult += `
@@ -839,7 +840,10 @@
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        if (finalPercentage >= 50) {
+        // Ngưỡng điểm để ĐẠT bài: Càng về câu dài ngưỡng đỗ càng dễ (Chỉ cần >= 35% đến 40%)
+        const passThreshold = isLongSentence ? 38 : 50;
+
+        if (finalPercentage >= passThreshold) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
