@@ -704,8 +704,8 @@
         scoreBadgeEl.style.display = "block";
         wordAnalysisEl.innerHTML = htmlResult;
 
-        // Điểm đạt: Từ 70% trở lên (chấm cẩn thận & chuẩn xác hơn)
-        if (finalPercentage >= 70) {
+        // Điểm đạt: Từ 55% trở lên
+        if (finalPercentage >= 55) {
             playSound('success');
             isCurrentPassed = true;
             statusMessageEl.className = "status-message status-success";
